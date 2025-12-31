@@ -257,16 +257,41 @@ function clearSignature() {
 
 function startDrawing(e) {
   isDrawing = true;
-  const rect = e.target.getBoundingClientRect();
+  const canvas = e.target;
+  const rect = canvas.getBoundingClientRect();
+  
+  // Calculate scale ratio (if canvas is scaled)
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  
+  // Get accurate position
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+  
   signatureContext.beginPath();
-  signatureContext.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+  signatureContext.moveTo(x, y);
+  
+  e.preventDefault(); // Prevent scrolling
 }
 
 function draw(e) {
   if (!isDrawing) return;
-  const rect = e.target.getBoundingClientRect();
-  signatureContext.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+  
+  const canvas = e.target;
+  const rect = canvas.getBoundingClientRect();
+  
+  // Calculate scale ratio
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  
+  // Get accurate position
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+  
+  signatureContext.lineTo(x, y);
   signatureContext.stroke();
+  
+  e.preventDefault(); // Prevent scrolling
 }
 
 function stopDrawing() {
@@ -276,18 +301,39 @@ function stopDrawing() {
 function handleTouchStart(e) {
   e.preventDefault();
   const touch = e.touches[0];
-  const rect = e.target.getBoundingClientRect();
+  const canvas = e.target;
+  const rect = canvas.getBoundingClientRect();
+  
+  // Calculate scale ratio
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  
+  // Get accurate position
+  const x = (touch.clientX - rect.left) * scaleX;
+  const y = (touch.clientY - rect.top) * scaleY;
+  
   isDrawing = true;
   signatureContext.beginPath();
-  signatureContext.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+  signatureContext.moveTo(x, y);
 }
 
 function handleTouchMove(e) {
   if (!isDrawing) return;
   e.preventDefault();
+  
   const touch = e.touches[0];
-  const rect = e.target.getBoundingClientRect();
-  signatureContext.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+  const canvas = e.target;
+  const rect = canvas.getBoundingClientRect();
+  
+  // Calculate scale ratio
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  
+  // Get accurate position
+  const x = (touch.clientX - rect.left) * scaleX;
+  const y = (touch.clientY - rect.top) * scaleY;
+  
+  signatureContext.lineTo(x, y);
   signatureContext.stroke();
 }
 
