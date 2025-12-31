@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semak Status - DSweb</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-gray-50">
+
+<!-- Header -->
+<div class="header-container">
+  <img src="assets/DSweb.jpeg" alt="DSweb JPN Pahang" class="header-banner">
+  <div class="header-title">
+    <h1>DSweb – Jabatan Pendidikan Negeri Pahang</h1>
+    <p>Sistem Permohonan Tandatangan Digital</p>
+  </div>
+</div>
+
+<div class="min-h-screen py-8 px-4">
+  <div class="max-w-lg mx-auto">
+    
+    <div class="bg-white shadow-soft rounded-lg p-6">
+      <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Semak Status Permohonan</h1>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold mb-2 text-gray-700">Request ID</label>
+          <input 
+            type="text" 
+            id="requestId" 
+            placeholder="Contoh: REQ-2025-0001"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-smooth"
+          >
+        </div>
+        
+        <button 
+          onclick="checkStatus()"
+          class="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition-smooth btn"
+        >
+          Semak Status
+        </button>
+      </div>
+      
+      <div id="statusResult" class="mt-6"></div>
+    </div>
+    
+    <div class="text-center mt-6">
+      <a href="index.html" class="text-blue-900 font-semibold underline hover:text-blue-700 transition-smooth">
+        ← Kembali ke Borang
+      </a>
+    </div>
+    
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script>
+async function checkStatus() {
+  const requestId = document.getElementById('requestId').value.trim();
+  const resultDiv = document.getElementById('statusResult');
+  
+  console.log('Checking status for:', requestId);
+
+  if (!requestId) {
+    Toast.warning('Sila masukkan Request ID');
+    return;
+  }
+  
+  resultDiv.innerHTML = `
+    <div class="flex items-center justify-center py-8">
+      <div class="loading-spinner"></div>
+    </div>
+  `;
+  
+  try {
+    const response = await fetch(CONFIG.ENDPOINT, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'checkStatus',
+        requestId: requestId
+      })
+    });
+    
+    const result = await response.json();
+    
+    console.log('Status result:', result);
+    
+    if (result.ok && result.request) {
+      const req = result.request;
+      
+      const statusConfig = {
+        'Signed': {
+          color: 'green',
+          icon: '✓',
+          text: 'SIGNED'
+        },
+        'Rejected': {
+          color: 'red',
+          icon: '✗',
+          text: 'REJECTED'
+        },
+        'Pending': {
+          color: 'yellow',
+          icon: '⏳',
+          text: 'PENDING'
+        }
+      };
+      
+      const status = statusConfig[req.status] || statusConfig['Pending'];
+      
+      resultDiv.innerHTML = `
+        <div class="border border-gray-200 rounded-lg p-5 shadow-soft">
+          <div class="flex justify-between items-center mb-4 pb-4 border-b">
+            <div>
+              <p class="font-bold text-xl text-gray-800">${req.requestId}</p>
+              <p class="text-sm text-gray-500">${req.tarikhMohon}</p>
+            </div>
+            <span class="bg-${status.color}-100 text-${status.color}-800 text-sm px-4 py-2 rounded-full font-bold flex items-center gap-2">
+              <span>${status.icon}</span>
+              <span>${status.text}</span>
+            </span>
+          </div>
+          
+          <div class="space-y-2 text-sm">
+            <div class="flex">
+              <span class="font-semibold text-gray-700 w-32">Pemohon:</span>
+              <span class="text-gray-600">${req.namaPemohon}</span>
+            </div>
+            <div class="flex">
+              <span class="font-semibold text-gray-700 w-32">Sektor:</span>
+              <span class="text-gray-600">${req.sektor}</span>
+            </div>
+            <div class="flex">
+              <span class="font-semibold text-gray-700 w-32">Tajuk:</span>
+              <span class="text-gray-600">${req.tajukSurat}</span>
+            </div>
+            ${req.status === 'Signed' ? `
+              <div class="flex mt-3 pt-3 border-t">
+                <span class="font-semibold text-gray-700 w-32">Tarikh Signed:</span>
+                <span class="text-green-700 font-semibold">${req.tarikhSigned || '-'}</span>
+              </div>
+            ` : ''}
+            ${req.status === 'Rejected' ? `
+              <div class="flex mt-3 pt-3 border-t">
+                <span class="font-semibold text-gray-700 w-32">Sebab:</span>
+                <span class="text-red-700">${req.rejectReason || '-'}</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+      
+      Toast.success('Status dijumpai');
+      
+    } else {
+      resultDiv.innerHTML = `
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+          <div class="flex items-start">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="font-bold text-red-800">Request ID tidak dijumpai</p>
+              <p class="text-sm text-red-700">Sila semak semula Request ID anda.</p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      Toast.error('Request ID tidak dijumpai');
+    }
+    
+  } catch (err) {
+    resultDiv.innerHTML = `
+      <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+        <p class="font-bold text-red-800">Ralat</p>
+        <p class="text-sm text-red-700">${err.message}</p>
+      </div>
+    `;
+    
+    Toast.error('Ralat semasa menyemak status');
+  }
+}
+
+// Enter key submit
+document.getElementById('requestId').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    checkStatus();
+  }
+});
+</script>
+
+</body>
+</html>

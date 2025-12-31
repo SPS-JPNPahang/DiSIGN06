@@ -1,0 +1,664 @@
+/* ============================================
+   DSWEB - JPN PAHANG STYLESHEET
+   ============================================ */
+
+/* === VARIABLES === */
+:root {
+  --primary: #1e3a8a;
+  --primary-dark: #1e40af;
+  --success: #059669;
+  --warning: #f59e0b;
+  --error: #dc2626;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-600: #4b5563;
+  --gray-800: #1f2937;
+}
+
+/* === HEADER === */
+.header-container {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 0; /* ← ADD THIS */
+  margin: 0; /* ← ADD THIS */
+}
+
+.header-banner {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover; /* ← Change from contain to cover */
+  max-height: 200px; /* ← Limit height */
+}
+
+.header-title {
+  color: white;
+  text-align: center;
+  padding: 1rem 1rem;
+}
+
+.header-title h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.header-title p {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+/* === CUSTOM TOAST NOTIFICATIONS === */
+.custom-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 300px;
+  max-width: 500px;
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateX(400px);
+  transition: all 0.3s ease-in-out;
+  z-index: 9999;
+}
+
+.custom-toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.custom-toast-success {
+  background: #d1fae5;
+  border-left: 4px solid var(--success);
+  color: #065f46;
+}
+
+.custom-toast-error {
+  background: #fee2e2;
+  border-left: 4px solid var(--error);
+  color: #991b1b;
+}
+
+.custom-toast-warning {
+  background: #fef3c7;
+  border-left: 4px solid var(--warning);
+  color: #92400e;
+}
+
+.custom-toast-info {
+  background: #dbeafe;
+  border-left: 4px solid var(--primary);
+  color: #1e3a8a;
+}
+
+.toast-icon {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.toast-message {
+  flex: 1;
+}
+
+/* === PDF VIEWER ENHANCEMENTS === */
+#pdfViewerContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--gray-100);
+  padding: 20px;
+  border-radius: 8px;
+  width: 100%;
+  max-height: 60vh; /* ← ADD THIS: 60% of viewport height */
+  overflow: auto; /* ← ADD THIS: scrollable if too large */
+}
+
+#pdfCanvas {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  background: white;
+  min-width: 400px;
+  min-height: 500px;
+}
+
+/* === SIGNATURE PREVIEW === */
+.signature-preview {
+  position: absolute;
+  border: 2px dashed #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  cursor: move;
+  user-select: none;
+  transition: border-color 0.2s;
+}
+
+.signature-preview:hover {
+  border-color: #2563eb;
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.signature-preview img {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #3b82f6;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.resize-handle:hover {
+  background: #2563eb;
+  transform: scale(1.2);
+}
+
+.resize-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
+.resize-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
+.resize-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+.resize-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+
+/* === BUTTONS === */
+.btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* === LOADING SPINNER === */
+.loading-spinner {
+  border: 3px solid var(--gray-200);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 640px) {
+  .custom-toast {
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+  }
+  
+  .header-title h1 {
+    font-size: 1.5rem;
+  }
+  
+  #pdfViewerContainer {
+    padding: 10px;
+  }
+}
+
+/* === UTILITY CLASSES === */
+.shadow-soft {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.transition-smooth {
+  transition: all 0.3s ease-in-out;
+}
+/* === TAB NAVIGATION === */
+.tab-button {
+  padding: 1rem 2rem;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.tab-button:hover {
+  color: #1e3a8a;
+  background: #f3f4f6;
+}
+
+.tab-button.active {
+  color: #1e3a8a;
+  border-bottom-color: #1e3a8a;
+  background: white;
+}
+
+.sub-tab-button {
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.sub-tab-button:hover {
+  color: #1e3a8a;
+  background: #e5e7eb;
+}
+
+.sub-tab-button.active {
+  color: #1e3a8a;
+  border-bottom-color: #1e3a8a;
+  background: white;
+}
+
+.tab-content {
+  display: block;
+}
+
+.sub-content {
+  display: block;
+}
+/* Viewer action buttons - responsive */
+.viewer-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.viewer-actions button {
+  flex: 1;
+  min-width: 150px;
+  white-space: nowrap;
+}
+
+/* Mobile: Stack vertically */
+@media (max-width: 768px) {
+  .viewer-actions {
+    flex-direction: column;
+  }
+  
+  .viewer-actions button {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+/* Tablet: Larger touch targets */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .viewer-actions button {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  .resize-handle {
+    width: 16px;
+    height: 16px;
+  }
+}
+/* === NAVIGATION DROPDOWN === */
+.nav-dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.nav-dropdown-item:first-child {
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.nav-dropdown-item:last-child {
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.nav-dropdown-item:hover {
+  background-color: #f3f4f6;
+  color: #1e3a8a;
+}
+
+/* Arrow rotation */
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  nav .max-w-6xl {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  nav .flex.gap-6 {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  .nav-dropdown-item {
+    font-size: 0.8125rem;
+  }
+}
+/* === FOOTER === */
+.footer {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  text-align: center;
+  padding: 1rem 1rem;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer p {
+  margin: 0.25rem 0;
+  font-size: 0.75rem;;
+}
+
+.footer .copyright {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.footer .tagline {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8125rem;
+}
+
+/* Make body flex to push footer down */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+body > * {
+  flex-shrink: 0;
+}
+
+.min-h-screen {
+  flex: 1;
+}
+/* =====================================================
+   DESKTOP COMPACT MODE (APPLICATION VIEW)
+   ===================================================== */
+
+@media (min-width: 1024px) {
+
+  /* Kurangkan header banner dominance */
+  .header-banner {
+    max-height: 140px;
+  }
+
+  .header-title {
+    padding: 0.5rem 1rem;
+  }
+
+  .header-title h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .header-title p {
+    font-size: 0.75rem;
+  }
+
+  /* Kurangkan vertical pressure */
+  .min-h-screen {
+    min-height: auto;
+  }
+
+  /* Kad utama jadi lebih padat */
+  .shadow-soft {
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Kurangkan padding global card */
+  .bg-white.rounded-lg {
+    padding: 1.25rem !important;
+  }
+
+}
+@media (min-width: 1024px) {
+
+  /* Form & status containers lebih fokus */
+  .max-w-2xl,
+  .max-w-3xl,
+  .max-w-lg {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Tajuk form jangan terlalu besar */
+  h2.text-3xl {
+    font-size: 1.75rem;
+  }
+
+  h2.text-2xl {
+    font-size: 1.5rem;
+  }
+
+}
+@media (min-width: 1024px) {
+
+  nav {
+    position: sticky;
+    top: 32;
+    z-index: 40;
+  }
+
+  nav .max-w-6xl {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+}
+/* =====================================================
+   DESKTOP DENSITY MODE (ENTERPRISE UI)
+   ===================================================== */
+
+@media (min-width: 1024px) {
+
+  /* GLOBAL TEXT SCALE */
+  body {
+    font-size: 14px;
+  }
+
+  /* HEADINGS – JANGAN HERO */
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.25rem !important; }
+  h3 { font-size: 1.1rem !important; }
+
+  /* CARDS – PADAT */
+  .bg-white.rounded-lg {
+    padding: 1rem !important;
+    border-radius: 0.5rem;
+  }
+
+  /* FORMS – COMPACT */
+  input,
+  select,
+  textarea {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem;
+  }
+
+  /* BUTTONS – APP STYLE */
+  button,
+  .btn {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  /* REMOVE MARKETING FEEL */
+  .btn:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* STATUS BADGES */
+  .rounded-full {
+    padding: 0.25rem 0.75rem !important;
+    font-size: 0.75rem;
+  }
+
+}
+/* =====================================================
+   MINIMAL HEADER MODE
+   ===================================================== */
+
+.header-banner {
+  display: none;
+}
+
+.header-container {
+  background: white;
+  box-shadow: none;
+}
+
+.header-title {
+  padding: 0.5rem 1rem;
+}
+
+.header-title h1 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.header-title p {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+.app-brand {
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+  color: #f59e0b; /* oren */
+}
+
+.app-brand span {
+  font-weight: 600;
+  opacity: 0.9;
+}
+/* ============================================
+   STICKY NOTICE BAR (DALAMAN SAHAJA)
+   ============================================ */
+
+/* === FIXED NOTICE BAR === */
+.notice-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  background: #fde047; /* kuning lembut */
+  color: #1f2937;
+  font-size: 0.75rem;   /* KECIL */
+  font-weight: 600;
+
+  padding: 0.35rem 1rem; /* nipis */
+  text-align: center;
+  border-bottom: 1px solid #facc15;
+}
+/* ===============================
+   DASHBOARD PENGARAH – COMPACT
+   =============================== */
+
+#dashboardScreen .header-banner {
+  display: none;
+}
+
+#dashboardScreen .header-container {
+  background: #1e3a8a;
+  padding: 0.5rem 1rem;
+  box-shadow: none;
+}
+
+#dashboardScreen .header-title h1 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+#dashboardScreen .container {
+  max-width: 1200px;
+}
+
+#dashboardScreen h2 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+/* ===============================
+   PDF VIEWER – ENTERPRISE MODE
+   =============================== */
+
+#viewerScreen > div:first-child {
+  background: #1e3a8a;
+  padding: 0.5rem 1rem;
+}
+
+#viewerScreen button {
+  padding: 0.45rem 0.75rem !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+#viewerScreen .bg-white {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+/* ===============================
+   MODAL – CLEAN & SERIUS
+   =============================== */
+
+#signatureOverlay .rounded-lg,
+#rejectModal .rounded-lg,
+#previewOverlay .rounded-lg {
+  border-radius: 0.5rem;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+}
+
+#signatureOverlay h3,
+#rejectModal h3,
+#previewOverlay h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+/* ===============================
+   FOOTER – ONLY PUBLIC PAGES
+   =============================== */
+
+#dashboardScreen ~ footer,
+#viewerScreen ~ footer {
+  display: none;
+}
+

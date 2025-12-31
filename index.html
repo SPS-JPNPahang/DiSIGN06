@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSweb – JPN Pahang</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-gray-50">
+
+<!-- Sticky Notice Bar -->
+<div class="notice-bar">
+  Terhad untuk permohonan <strong>dalaman</strong> Jabatan Pendidikan Negeri Pahang sahaja
+</div>
+
+
+<!-- Main Navigation -->
+<nav class="bg-blue-900 text-white">
+<div class="container mx-auto px-4 py-3 flex items-center justify-between">
+<!-- LEFT: APP BRAND -->
+<div class="app-brand">DiGITAL <span>Signature</span></div>
+
+    <div class="flex gap-4 items-center">
+      <!-- Permohonan Dropdown -->
+      <div class="relative" id="permohonanMenu">
+        <button
+          class="flex items-center gap-2 font-semibold hover:text-blue-200 transition-smooth"
+          onclick="toggleDropdown('permohonanMenu')"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          Permohonan
+          <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="absolute right-0 mt-3 w-56 bg-white text-gray-800 rounded-lg shadow-lg hidden">
+          <button onclick="selectSubTab('utama')" class="nav-dropdown-item">
+            <span class="mr-2">🏠</span> Utama
+          </button>
+          <button onclick="selectSubTab('permohonan')" class="nav-dropdown-item">
+            <span class="mr-2">📝</span> Permohonan
+          </button>
+          <button onclick="selectSubTab('semakan')" class="nav-dropdown-item">
+            <span class="mr-2">🔍</span> Semakan Status
+          </button>
+        </div>
+      </div>
+      
+      <!-- Pentadbir -->
+      <button
+        onclick="showTab('pentadbir')"
+        class="font-semibold hover:text-blue-200 transition-smooth"
+      >
+        Pentadbir
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- PEMOHON SECTION (NO SUB-TABS) -->
+<div id="pemohonSection" class="tab-content">
+  
+  <!-- Utama Content -->
+  <div id="utamaContent" class="sub-content">
+    <div class="min-h-screen py-8 px-4">
+      <div class="max-w-3xl mx-auto">
+        <div class="bg-white shadow-soft rounded-lg p-8">
+          
+          <!-- HERO IMAGE -->
+          <div class="mb-6">
+            <img 
+              src="assets/DSweb.jpg" 
+              alt="Digital Signature"
+              class="w-full rounded-lg shadow-soft object-cover max-h-56"
+            >
+          </div>
+
+          <!-- TWO COLUMN INFO -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Panduan Ringkas -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-lg">
+              <h3 class="font-bold text-gray-800 mb-3">Panduan Ringkas</h3>
+              <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                <li>Klik menu <strong>Permohonan</strong></li>
+                <li>Isi borang & muat naik PDF</li>
+                <li>Simpan <strong>Request ID</strong></li>
+                <li>Semak status permohonan</li>
+              </ol>
+            </div>
+
+            <!-- Kelebihan -->
+            <div class="bg-green-50 border-l-4 border-green-500 p-5 rounded-lg">
+              <h3 class="font-bold text-gray-800 mb-3">Kelebihan DSweb</h3>
+              <ul class="list-disc list-inside space-y-2 text-sm text-gray-700">
+                <li>Permohonan tandatangan digital</li>
+                <li>Tiada kehadiran fizikal</li>
+                <li>Status boleh dijejak</li>
+                <li>Dokumen selamat & sah</li>
+              </ul>
+            </div>
+
+          </div>
+
+          <!-- CTA -->
+          <div class="mt-8 text-center">
+            <button
+              onclick="showSubTab('permohonan')"
+              class="bg-blue-900 text-white px-10 py-3 rounded-lg font-semibold hover:bg-blue-800 transition-smooth btn"
+            >
+              Mula Permohonan →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Permohonan Content -->
+  <div id="permohonanContent" class="sub-content hidden">
+    <div class="min-h-screen py-8 px-4">
+      <div class="max-w-2xl mx-auto">
+        <div class="bg-white shadow-soft rounded-lg p-6">
+          <h2 class="text-xl font-bold mb-6 text-gray-800">Borang Permohonan</h2>
+          
+          <form id="form" class="space-y-4">
+            
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">Nama Pemohon *</label>
+              <input 
+                type="text"
+                id="nama" 
+                placeholder="Nama penuh" 
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-smooth"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">Email *</label>
+              <input 
+                type="email"
+                id="email" 
+                placeholder="email@contoh.com" 
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-smooth"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">No. Telefon *</label>
+              <input 
+                type="tel"
+                id="telefon" 
+                placeholder="012-3456789" 
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-smooth"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">Tajuk Surat *</label>
+              <input 
+                type="text"
+                id="tajuk" 
+                placeholder="Contoh: Permohonan Program XYZ" 
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-smooth"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">Perihal *</label>
+              <textarea 
+                id="perihal" 
+                placeholder="Huraian ringkas tentang permohonan" 
+                required
+                rows="4"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-smooth"
+              ></textarea>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">Sektor *</label>
+              <select 
+                id="sektor" 
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-smooth"
+              >
+                <option value="">-- Pilih Sektor --</option>
+                <option>Sektor Akademik</option>
+                <option>Sektor Pengurusan Sekolah</option>
+                <option>Sektor Kokurikulum</option>
+                <option>Sektor Pentadbiran</option>
+                <option>Sektor Kewangan</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">Upload PDF *</label>
+              <input 
+                type="file" 
+                id="pdf" 
+                accept="application/pdf" 
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-smooth file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-900 hover:file:bg-blue-100"
+              >
+              <p class="text-xs text-gray-500 mt-2">Maksimum 10MB, format PDF sahaja</p>
+            </div>
+            
+            <button 
+              type="submit"
+              class="w-full bg-blue-900 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-800 transition-smooth btn"
+            >
+              Hantar Permohonan
+            </button>
+            
+          </form>
+          
+          <!-- Result -->
+          <div id="result" class="hidden mt-6"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Semakan Content -->
+  <div id="semakanContent" class="sub-content hidden">
+    <div class="min-h-screen py-8 px-4">
+      <div class="max-w-lg mx-auto">
+        <div class="bg-white shadow-soft rounded-lg p-6">
+          <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Semak Status Permohonan</h2>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-gray-700">Request ID</label>
+              <input 
+                type="text" 
+                id="requestId" 
+                placeholder="Contoh: REQ-2025-0001"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-smooth"
+              >
+            </div>
+            
+            <button 
+              onclick="checkStatus()"
+              class="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition-smooth btn"
+            >
+              Semak Status
+            </button>
+          </div>
+          
+          <div id="statusResult" class="mt-6"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PENTADBIR SECTION (Redirect) -->
+<div id="pentadbirSection" class="tab-content hidden">
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="text-center">
+      <div class="loading-spinner mx-auto mb-4"></div>
+      <p class="text-gray-700 font-semibold">Mengalihkan ke Portal Pengarah...</p>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script>
+// Tab Management
+function showTab(tab) {
+  if (tab === 'pentadbir') {
+    // Redirect to director login
+    window.location.href = 'director.html';
+  } else {
+    // For 'pemohon', just ensure section is visible
+    const pemohonSection = document.getElementById('pemohonSection');
+    if (pemohonSection) {
+      pemohonSection.classList.remove('hidden');
+    }
+  }
+}
+
+function showSubTab(subtab) {
+  // Hide all sub-contents
+  document.querySelectorAll('.sub-content').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.sub-tab-button').forEach(el => el.classList.remove('active'));
+  
+  if (subtab === 'utama') {
+    document.getElementById('utamaContent').classList.remove('hidden');
+    document.getElementById('subTabUtama').classList.add('active');
+  } else if (subtab === 'permohonan') {
+    document.getElementById('permohonanContent').classList.remove('hidden');
+    document.getElementById('subTabPermohonan').classList.add('active');
+  } else if (subtab === 'semakan') {
+    document.getElementById('semakanContent').classList.remove('hidden');
+    document.getElementById('subTabSemakan').classList.add('active');
+  }
+}
+
+function toggleDropdown(menuId) {
+  const menu = document.getElementById(menuId);
+  const dropdown = menu.querySelector('div');
+  const button = menu.querySelector('button');
+  const arrow = button.querySelector('svg');
+  
+  // Toggle dropdown
+  dropdown.classList.toggle('hidden');
+  
+  // Rotate arrow
+  arrow.classList.toggle('rotate-180');
+  
+  // Update aria
+  button.setAttribute('aria-expanded', !dropdown.classList.contains('hidden'));
+}
+
+function selectSubTab(subtab) {
+  showSubTab(subtab);
+  
+  // Close all dropdowns
+  document.querySelectorAll('.relative > div').forEach(d => d.classList.add('hidden'));
+  
+  // Reset arrows
+  document.querySelectorAll('.relative svg').forEach(s => s.classList.remove('rotate-180'));
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.relative')) {
+    document.querySelectorAll('.relative > div').forEach(d => d.classList.add('hidden'));
+    document.querySelectorAll('.relative svg').forEach(s => s.classList.remove('rotate-180'));
+  }
+});
+// Form Submission
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const file = document.getElementById('pdf').files[0];
+  
+  // Show loading overlay
+  const loadingOverlay = document.createElement('div');
+  loadingOverlay.id = 'submitLoadingOverlay';
+  loadingOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+  loadingOverlay.innerHTML = `
+    <div class="bg-white p-6 rounded-lg shadow-xl">
+      <div class="text-center">
+        <div class="loading-spinner mx-auto mb-4"></div>
+        <p class="text-gray-700 font-semibold">Menghantar permohonan...</p>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(loadingOverlay);
+  
+  try {
+    Utils.validateFile(file);
+  } catch (err) {
+    document.getElementById('submitLoadingOverlay').remove();
+    Toast.error(err.message);
+    return;
+  }
+
+  const resultDiv = document.getElementById('result');
+  resultDiv.classList.add('hidden');
+  
+  try {
+    const base64 = await Utils.fileToBase64(file);
+    
+    const payload = {
+      data: {
+        nama: nama.value.trim(),
+        email: email.value.trim(),
+        telefon: telefon.value.trim(),
+        tajuk: tajuk.value.trim(),
+        perihal: perihal.value.trim(),
+        sektor: sektor.value
+      },
+      file: {
+        filename: file.name,
+        mimeType: file.type,
+        base64: base64.split(',')[1]
+      }
+    };
+
+    const res = await fetch(CONFIG.ENDPOINT, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    const json = await res.json();
+    
+    document.getElementById('submitLoadingOverlay').remove();
+    
+    if (json.ok) {
+      resultDiv.innerHTML = `
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+          <div class="flex items-start">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="font-bold text-green-800">Permohonan Berjaya!</p>
+              <p class="text-sm text-green-700 mt-1">Request ID: <strong class="font-mono">${json.requestId}</strong></p>
+              <p class="text-xs text-green-600 mt-2">Simpan Request ID ini untuk semakan status.</p>
+            </div>
+          </div>
+        </div>
+      `;
+      resultDiv.classList.remove('hidden');
+      
+      Toast.success('Permohonan berjaya dihantar!');
+      
+      // Reset form after 2 seconds
+      setTimeout(() => {
+        document.getElementById('form').reset();
+      }, 2000);
+      
+    } else {
+      throw new Error(json.message || 'Ralat tidak diketahui');
+    }
+
+  } catch (err) {
+    document.getElementById('submitLoadingOverlay').remove();
+    
+    resultDiv.innerHTML = `
+      <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="font-bold text-red-800">Ralat!</p>
+            <p class="text-sm text-red-700">${err.message}</p>
+          </div>
+        </div>
+      </div>
+    `;
+    resultDiv.classList.remove('hidden');
+    
+    Toast.error('Gagal menghantar permohonan');
+  }
+});
+
+// Status Check
+async function checkStatus() {
+  const requestId = document.getElementById('requestId').value.trim();
+  const resultDiv = document.getElementById('statusResult');
+  
+  console.log('Checking status for:', requestId);
+  
+  if (!requestId) {
+    Toast.warning('Sila masukkan Request ID');
+    return;
+  }
+  
+  resultDiv.innerHTML = `
+    <div class="flex items-center justify-center py-8">
+      <div class="loading-spinner"></div>
+    </div>
+  `;
+  
+  try {
+    const response = await fetch(CONFIG.ENDPOINT, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'checkStatus',
+        requestId: requestId
+      })
+    });
+    
+    const result = await response.json();
+    
+    console.log('Status result:', result);
+    
+    if (result.ok && result.request) {
+      const req = result.request;
+      
+      const statusConfig = {
+        'Signed': {
+          color: 'green',
+          icon: '✓',
+          text: 'SIGNED'
+        },
+        'Rejected': {
+          color: 'red',
+          icon: '✗',
+          text: 'REJECTED'
+        },
+        'Pending': {
+          color: 'yellow',
+          icon: '⏳',
+          text: 'PENDING'
+        }
+      };
+      
+      const status = statusConfig[req.status] || statusConfig['Pending'];
+      
+      resultDiv.innerHTML = `
+        <div class="border border-gray-200 rounded-lg p-5 shadow-soft">
+          <div class="flex justify-between items-center mb-4 pb-4 border-b">
+            <div>
+              <p class="font-bold text-xl text-gray-800">${req.requestId}</p>
+              <p class="text-sm text-gray-500">${req.tarikhMohon}</p>
+            </div>
+            <span class="bg-${status.color}-100 text-${status.color}-800 text-sm px-4 py-2 rounded-full font-bold flex items-center gap-2">
+              <span>${status.icon}</span>
+              <span>${status.text}</span>
+            </span>
+          </div>
+          
+          <div class="space-y-2 text-sm">
+            <div class="flex">
+              <span class="font-semibold text-gray-700 w-32">Pemohon:</span>
+              <span class="text-gray-600">${req.namaPemohon}</span>
+            </div>
+            <div class="flex">
+              <span class="font-semibold text-gray-700 w-32">Sektor:</span>
+              <span class="text-gray-600">${req.sektor}</span>
+            </div>
+            <div class="flex">
+              <span class="font-semibold text-gray-700 w-32">Tajuk:</span>
+              <span class="text-gray-600">${req.tajukSurat}</span>
+            </div>
+            <div class="flex">
+              <span class="font-semibold text-gray-700 w-32">Perihal:</span>
+              <span class="text-gray-600">${req.perihal || '-'}</span>
+            </div>
+            ${req.status === 'Signed' ? `
+            <div class="flex mt-3 pt-3 border-t">
+              <span class="font-semibold text-gray-700 w-32">Tarikh Signed:</span>
+              <span class="text-green-700 font-semibold">${req.tarikhSigned || '-'}</span>
+            </div>
+            ${req.pdfSignedUrl ? `
+              <div class="mt-4 pt-4 border-t">
+                <a 
+                  href="${req.pdfSignedUrl}" 
+                  target="_blank"
+                  download="${req.requestId}_signed.pdf"
+                  class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-smooth btn"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Muat Turun Dokumen Bertandatangan
+                </a>
+              </div>
+            ` : ''}
+          ` : ''}
+            ${req.status === 'Rejected' ? `
+              <div class="flex mt-3 pt-3 border-t">
+                <span class="font-semibold text-gray-700 w-32">Sebab:</span>
+                <span class="text-red-700">${req.rejectReason || '-'}</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+      
+      Toast.success('Status dijumpai');
+      
+    } else {
+      resultDiv.innerHTML = `
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+          <div class="flex items-start">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="font-bold text-red-800">Request ID tidak dijumpai</p>
+              <p class="text-sm text-red-700">Sila semak semula Request ID anda.</p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      Toast.error('Request ID tidak dijumpai');
+    }
+    
+  } catch (err) {
+    resultDiv.innerHTML = `
+      <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+        <p class="font-bold text-red-800">Ralat</p>
+        <p class="text-sm text-red-700">${err.message}</p>
+      </div>
+    `;
+    
+    Toast.error('Ralat semasa menyemak status');
+  }
+}
+
+// Enter key for status
+document.getElementById('requestId').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    checkStatus();
+  }
+});
+
+// Initialize - show Utama by default
+document.addEventListener('DOMContentLoaded', function() {
+  // Ensure pemohon section visible
+  const pemohonSection = document.getElementById('pemohonSection');
+  if (pemohonSection) {
+    pemohonSection.classList.remove('hidden');
+  }
+  
+  // Show Utama tab
+  const utamaContent = document.getElementById('utamaContent');
+  if (utamaContent) {
+    utamaContent.classList.remove('hidden');
+  }
+});
+</script>
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <p class="copyright">© 2026 Jabatan Pendidikan Negeri Pahang</p>
+        <p class="tagline">Sistem Permohonan Tandatangan Digital </p>
+      </div>
+    </footer>
+</body>
+</html>
