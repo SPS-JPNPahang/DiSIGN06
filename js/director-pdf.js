@@ -23,6 +23,7 @@ let isResizing = false;
 let dragStartX = 0;
 let dragStartY = 0;
 let resizeHandle = null;
+let lastPointerX = null;
 
 // ============================================
 // VIEW REQUEST & LOAD PDF
@@ -490,7 +491,8 @@ function stopDrag() {
   if (isDragging) isDragging = false;
   if (isResizing) isResizing = false;
   resizeHandle = null;
-  
+  lastPointerX = null;
+
   // Reset visual feedback
   if (signaturePreview) {
     signaturePreview.style.opacity = '1'; // Back to normal
@@ -503,105 +505,108 @@ function stopDrag() {
 // Resize functions
 function startResize(e) {
   isResizing = true;
-  isDragging = false; // ⛔ MATIKAN DRAG
+  isDragging = false;
   resizeHandle = 'se';
-  dragStartX = e.clientX;
+
+  lastPointerX = e.clientX; // ✅ INIT PER-FRAME
+
   e.stopPropagation();
   e.preventDefault();
 }
 
+
 function startResizeTouch(e) {
   const touch = e.touches[0];
+
   isResizing = true;
-  isDragging = false; // ⛔ penting
+  isDragging = false;
   resizeHandle = 'se';
-  dragStartX = touch.clientX;
-  dragStartY = touch.clientY;
+
+  lastPointerX = touch.clientX; // ✅ INIT PER-FRAME
+
   e.stopPropagation();
   e.preventDefault();
 }
+
 // ============================================
 // UNIFIED DRAG & RESIZE HANDLER (STABIL)
 // ============================================
 
 document.addEventListener('mousemove', (e) => {
-  if (!signaturePreview) return;
-
-  // === RESIZE MODE ===
-  if (isResizing) {
-    const deltaX = e.clientX - dragStartX;
-
-    const MIN_WIDTH = 80;
+  // === RESIZE MODE (SMOOTH) ===
+  if (isResizing && signaturePreview) {
+    const STEP = 2;        // ✅ kelajuan resize (Adobe-like)
+    const MIN_WIDTH = 100;
     const MAX_WIDTH = 320;
+
+    const currentX = e.clientX;
+    const deltaX = currentX - lastPointerX;
+
+    // elak jitter bila sentuh sahaja
+    if (Math.abs(deltaX) < 3) return;
+
+    lastPointerX = currentX;
 
     const currentWidth = parseInt(signaturePreview.style.width);
     const currentHeight = parseInt(signaturePreview.style.height);
     const aspectRatio = currentWidth / currentHeight;
 
-    let newWidth = currentWidth + deltaX;
+    let newWidth = currentWidth + Math.sign(deltaX) * STEP;
     newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
 
     signaturePreview.style.width = newWidth + 'px';
     signaturePreview.style.height = (newWidth / aspectRatio) + 'px';
 
-    dragStartX = e.clientX;
     return;
   }
 
   // === DRAG MODE ===
-  if (isDragging) {
-    signaturePreview.style.left = (e.clientX - dragStartX) + 'px';
-    signaturePreview.style.top  = (e.clientY - dragStartY) + 'px';
-  }
+  if (isDragging && signaturePreview) {
+  signaturePreview.style.left = (e.clientX - dragStartX) + 'px';
+  signaturePreview.style.top  = (e.clientY - dragStartY) + 'px';
+}
 });
 
 document.addEventListener('touchmove', (e) => {
   if (!signaturePreview) return;
-  const touch = e.touches[0];
 
   // === DRAG MODE ===
   if (isDragging && !isResizing) {
+    const touch = e.touches[0];
     signaturePreview.style.left = (touch.clientX - dragStartX) + 'px';
     signaturePreview.style.top  = (touch.clientY - dragStartY) + 'px';
     e.preventDefault();
     return;
   }
 
-  // === RESIZE MODE (PERLAHAN) ===
-  if (isResizing && !isDragging) {
-    const SENSITIVITY = 1.5; // Increase from 0.25 to 0.4 for better response
-    
-    const rawDeltaX = touch.clientX - dragStartX;
-    const deltaX = rawDeltaX * SENSITIVITY;
+  // === RESIZE MODE (TOUCH / PEN STABIL) ===
+if (isResizing && signaturePreview) {
+  const STEP = 2;
+  const MIN_WIDTH = 100;
+  const MAX_WIDTH = 320;
 
-        console.log('Touch resize:', {
-            touchX: touch.clientX,
-            startX: dragStartX,
-            rawDelta: rawDeltaX,
-            adjustedDelta: deltaX,
-            currentWidth: parseInt(signaturePreview.style.width)
-          });
-          
-    const MIN_WIDTH = 80;
-    const MAX_WIDTH = 400; // Increase max from 320
+  const touch = e.touches[0];
+  const currentX = touch.clientX;
+  const deltaX = currentX - lastPointerX;
 
-    const currentWidth = parseInt(signaturePreview.style.width);
-    const currentHeight = parseInt(signaturePreview.style.height);
-    const aspectRatio = currentWidth / currentHeight;
+  if (Math.abs(deltaX) < 3) return;
 
-    let newWidth = currentWidth + deltaX;
-    newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
+  lastPointerX = currentX;
 
-    const newHeight = newWidth / aspectRatio;
+  const currentWidth = parseInt(signaturePreview.style.width);
+  const currentHeight = parseInt(signaturePreview.style.height);
+  const aspectRatio = currentWidth / currentHeight;
 
-    signaturePreview.style.width = newWidth + 'px';
-    signaturePreview.style.height = newHeight + 'px';
+  let newWidth = currentWidth + Math.sign(deltaX) * STEP;
+  newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
 
-    //dragStartX = touch.clientX; // Update for next move
-    
-    e.preventDefault();
-    return;
-  }
+  signaturePreview.style.width = newWidth + 'px';
+  signaturePreview.style.height = (newWidth / aspectRatio) + 'px';
+
+  e.preventDefault();
+  return;
+}
+
 }, { passive: false });
 
 document.addEventListener('mouseup', stopDrag);
@@ -893,5 +898,3 @@ async function uploadSignedPdf(base64Data) {
     Toast.error('Ralat: ' + err.message);
   }
 }
-
-
