@@ -490,6 +490,12 @@ function stopDrag() {
   if (isDragging) isDragging = false;
   if (isResizing) isResizing = false;
   resizeHandle = null;
+  
+  // Reset visual feedback
+  if (signaturePreview) {
+    signaturePreview.style.opacity = '1'; // Back to normal
+  }
+  
   document.body.style.cursor = 'default';
 }
 
@@ -510,6 +516,7 @@ function startResizeTouch(e) {
   isDragging = false; // ⛔ penting
   resizeHandle = 'se';
   dragStartX = touch.clientX;
+  dragStartY = touch.clientY;
   e.stopPropagation();
   e.preventDefault();
 }
@@ -552,13 +559,31 @@ document.addEventListener('touchmove', (e) => {
   if (!signaturePreview) return;
   const touch = e.touches[0];
 
-  // === RESIZE MODE (PERLAHAN) ===
-  if (isResizing) {
-    const SENSITIVITY = 0.25;
-    const deltaX = (touch.clientX - dragStartX) * SENSITIVITY;
+  // === DRAG MODE ===
+  if (isDragging && !isResizing) {
+    signaturePreview.style.left = (touch.clientX - dragStartX) + 'px';
+    signaturePreview.style.top  = (touch.clientY - dragStartY) + 'px';
+    e.preventDefault();
+    return;
+  }
 
+  // === RESIZE MODE (PERLAHAN) ===
+  if (isResizing && !isDragging) {
+    const SENSITIVITY = 0.4; // Increase from 0.25 to 0.4 for better response
+    
+    const rawDeltaX = touch.clientX - dragStartX;
+    const deltaX = rawDeltaX * SENSITIVITY;
+
+        console.log('Touch resize:', {
+            touchX: touch.clientX,
+            startX: dragStartX,
+            rawDelta: rawDeltaX,
+            adjustedDelta: deltaX,
+            currentWidth: parseInt(signaturePreview.style.width)
+          });
+          
     const MIN_WIDTH = 80;
-    const MAX_WIDTH = 320;
+    const MAX_WIDTH = 400; // Increase max from 320
 
     const currentWidth = parseInt(signaturePreview.style.width);
     const currentHeight = parseInt(signaturePreview.style.height);
@@ -567,19 +592,15 @@ document.addEventListener('touchmove', (e) => {
     let newWidth = currentWidth + deltaX;
     newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
 
-    signaturePreview.style.width = newWidth + 'px';
-    signaturePreview.style.height = (newWidth / aspectRatio) + 'px';
+    const newHeight = newWidth / aspectRatio;
 
-    dragStartX = touch.clientX;
+    signaturePreview.style.width = newWidth + 'px';
+    signaturePreview.style.height = newHeight + 'px';
+
+    dragStartX = touch.clientX; // Update for next move
+    
     e.preventDefault();
     return;
-  }
-
-  // === DRAG MODE ===
-  if (isDragging) {
-    signaturePreview.style.left = (touch.clientX - dragStartX) + 'px';
-    signaturePreview.style.top  = (touch.clientY - dragStartY) + 'px';
-    e.preventDefault();
   }
 }, { passive: false });
 
