@@ -24,6 +24,7 @@ let dragStartX = 0;
 let dragStartY = 0;
 let resizeHandle = null;
 let lastPointerX = null;
+let activePointerId = null;
 
 // ============================================
 // VIEW REQUEST & LOAD PDF
@@ -410,51 +411,107 @@ async function applySignature() {
 // ============================================
 function placeSignatureOnPdf() {
   removeSignaturePreview();
-  
+
   const container = document.getElementById('pdfViewerContainer');
-  const canvas = document.getElementById('pdfCanvas');
-  
-  if (!canvas || !container) {
-    Toast.error('PDF canvas tidak dijumpai');
+  if (!container) {
+    Toast.error('PDF container tidak dijumpai');
     return;
   }
-  
-  // Create signature preview
+
   signaturePreview = document.createElement('div');
   signaturePreview.className = 'signature-preview';
   signaturePreview.style.width = CONFIG.SIGNATURE.DEFAULT_WIDTH + 'px';
   signaturePreview.style.height = CONFIG.SIGNATURE.DEFAULT_HEIGHT + 'px';
   signaturePreview.style.left = '50px';
   signaturePreview.style.top = '50px';
-  
+
   const img = document.createElement('img');
   img.src = signatureDataUrl;
+  img.draggable = false;
   signaturePreview.appendChild(img);
-  
-  
-    // Add ONE resize handle only (SE)
-    const handle = document.createElement('div');
-    handle.className = 'resize-handle se';
-    handle.dataset.position = 'se';
-    signaturePreview.appendChild(handle);
 
-  
+  // SATU handle resize sahaja (SE)
+  const handle = document.createElement('div');
+  handle.className = 'resize-handle se';
+  signaturePreview.appendChild(handle);
+
   container.appendChild(signaturePreview);
-  
-  // Setup events
-  signaturePreview.addEventListener('mousedown', startDrag);
-  signaturePreview.addEventListener('touchstart', startDragTouch);
-  
-  signaturePreview.querySelectorAll('.resize-handle').forEach(handle => {
-    handle.addEventListener('mousedown', startResize);
-    handle.addEventListener('touchstart', startResizeTouch);
-  });
-  
-  // Update button states
+
+  // 🔑 HANYA SATU EVENT DI SINI
+  signaturePreview.addEventListener('pointerdown', onPointerDown);
+
   updateButtonsAfterSignature();
-  
-  Toast.success('Tandatangan diletakkan. Seret untuk ubah posisi.');
+  Toast.success('Tandatangan diletakkan. Seret atau resize.');
 }
+function onPointerDown(e) {
+  if (!signaturePreview) return;
+
+  activePointerId = e.pointerId;
+  signaturePreview.setPointerCapture(activePointerId);
+
+  if (e.target.classList.contains('resize-handle')) {
+    isResizing = true;
+    isDragging = false;
+    lastPointerX = e.clientX;
+  } else {
+    isDragging = true;
+    isResizing = false;
+    dragStartX = e.clientX - signaturePreview.offsetLeft;
+    dragStartY = e.clientY - signaturePreview.offsetTop;
+  }
+
+  e.preventDefault();
+}
+
+document.addEventListener('pointermove', (e) => {
+  if (!signaturePreview) return;
+  if (e.pointerId !== activePointerId) return;
+
+  // ======================
+  // DRAG
+  // ======================
+  if (isDragging && !isResizing) {
+    signaturePreview.style.left =
+      (e.clientX - dragStartX) + 'px';
+    signaturePreview.style.top =
+      (e.clientY - dragStartY) + 'px';
+    return;
+  }
+
+  // ======================
+  // RESIZE (STABIL)
+  // ======================
+  if (isResizing) {
+    const STEP = 1.5;
+    const MIN_WIDTH = 80;
+    const MAX_WIDTH = 400;
+
+    const deltaX = e.clientX - lastPointerX;
+    if (Math.abs(deltaX) < 2) return;
+
+    lastPointerX = e.clientX;
+
+    const w = parseFloat(signaturePreview.style.width);
+    const h = parseFloat(signaturePreview.style.height);
+    const ratio = w / h;
+
+    let newWidth = w + Math.sign(deltaX) * STEP;
+    newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
+
+    signaturePreview.style.width = newWidth + 'px';
+    signaturePreview.style.height = (newWidth / ratio) + 'px';
+  }
+});
+
+document.addEventListener('pointerup', (e) => {
+  if (e.pointerId !== activePointerId) return;
+
+  isDragging = false;
+  isResizing = false;
+  lastPointerX = null;
+  activePointerId = null;
+});
+
 
 function removeSignaturePreview() {
   if (signaturePreview && signaturePreview.parentNode) {
@@ -467,150 +524,6 @@ function repositionSignaturePreview() {
   // Called after zoom/page change
   if (!signaturePreview) return;
 }
-
-// Drag functions
-function startDrag(e) {
-  if (isResizing) return; // ⛔ JANGAN DRAG BILA RESIZE
-  if (e.target.classList.contains('resize-handle')) return;
-  isDragging = true;
-  dragStartX = e.clientX - signaturePreview.offsetLeft;
-  dragStartY = e.clientY - signaturePreview.offsetTop;
-  e.preventDefault();
-}
-
-function startDragTouch(e) {
-  if (e.target.classList.contains('resize-handle')) return;
-  const touch = e.touches[0];
-  isDragging = true;
-  dragStartX = touch.clientX - signaturePreview.offsetLeft;
-  dragStartY = touch.clientY - signaturePreview.offsetTop;
-  e.preventDefault();
-}
-
-function stopDrag() {
-  if (isDragging) isDragging = false;
-  if (isResizing) isResizing = false;
-  resizeHandle = null;
-  lastPointerX = null;
-
-  // Reset visual feedback
-  if (signaturePreview) {
-    signaturePreview.style.opacity = '1'; // Back to normal
-  }
-  
-  document.body.style.cursor = 'default';
-}
-
-
-// Resize functions
-function startResize(e) {
-  isResizing = true;
-  isDragging = false;
-  resizeHandle = 'se';
-
-  lastPointerX = e.clientX; // ✅ INIT PER-FRAME
-
-  e.stopPropagation();
-  e.preventDefault();
-}
-
-
-function startResizeTouch(e) {
-  const touch = e.touches[0];
-
-  isResizing = true;
-  isDragging = false;
-  resizeHandle = 'se';
-
-  lastPointerX = touch.clientX; // ✅ INIT PER-FRAME
-
-  e.stopPropagation();
-  e.preventDefault();
-}
-
-// ============================================
-// UNIFIED DRAG & RESIZE HANDLER (STABIL)
-// ============================================
-
-document.addEventListener('mousemove', (e) => {
-  // === RESIZE MODE (SMOOTH) ===
-  if (isResizing && signaturePreview) {
-    const STEP = 2;        // ✅ kelajuan resize (Adobe-like)
-    const MIN_WIDTH = 100;
-    const MAX_WIDTH = 320;
-
-    const currentX = e.clientX;
-    const deltaX = currentX - lastPointerX;
-
-    // elak jitter bila sentuh sahaja
-    if (Math.abs(deltaX) < 3) return;
-
-    lastPointerX = currentX;
-
-    const currentWidth = parseInt(signaturePreview.style.width);
-    const currentHeight = parseInt(signaturePreview.style.height);
-    const aspectRatio = currentWidth / currentHeight;
-
-    let newWidth = currentWidth + Math.sign(deltaX) * STEP;
-    newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
-
-    signaturePreview.style.width = newWidth + 'px';
-    signaturePreview.style.height = (newWidth / aspectRatio) + 'px';
-
-    return;
-  }
-
-  // === DRAG MODE ===
-  if (isDragging && signaturePreview) {
-  signaturePreview.style.left = (e.clientX - dragStartX) + 'px';
-  signaturePreview.style.top  = (e.clientY - dragStartY) + 'px';
-}
-});
-
-document.addEventListener('touchmove', (e) => {
-  if (!signaturePreview) return;
-
-  // === DRAG MODE ===
-  if (isDragging && !isResizing) {
-    const touch = e.touches[0];
-    signaturePreview.style.left = (touch.clientX - dragStartX) + 'px';
-    signaturePreview.style.top  = (touch.clientY - dragStartY) + 'px';
-    e.preventDefault();
-    return;
-  }
-
-  // === RESIZE MODE (TOUCH / PEN STABIL) ===
-if (isResizing && signaturePreview) {
-  const STEP = 2;
-  const MIN_WIDTH = 100;
-  const MAX_WIDTH = 320;
-
-  const touch = e.touches[0];
-  const currentX = touch.clientX;
-  const deltaX = currentX - lastPointerX;
-
-  if (Math.abs(deltaX) < 3) return;
-
-  lastPointerX = currentX;
-
-  const currentWidth = parseInt(signaturePreview.style.width);
-  const currentHeight = parseInt(signaturePreview.style.height);
-  const aspectRatio = currentWidth / currentHeight;
-
-  let newWidth = currentWidth + Math.sign(deltaX) * STEP;
-  newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
-
-  signaturePreview.style.width = newWidth + 'px';
-  signaturePreview.style.height = (newWidth / aspectRatio) + 'px';
-
-  e.preventDefault();
-  return;
-}
-
-}, { passive: false });
-
-document.addEventListener('mouseup', stopDrag);
-document.addEventListener('touchend', stopDrag);
 
 // ============================================
 // SHARED: Calculate signature position relative to canvas
@@ -898,3 +811,4 @@ async function uploadSignedPdf(base64Data) {
     Toast.error('Ralat: ' + err.message);
   }
 }
+
