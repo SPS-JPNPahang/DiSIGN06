@@ -531,110 +531,78 @@ document.addEventListener('touchmove', (e) => {
   }
 });
 
-// Global resize listener - ALWAYS proportional
+// ============================================
+// RESIZE (DESKTOP) – WIDTH ONLY, UX FRIENDLY
+// ============================================
 document.addEventListener('mousemove', (e) => {
   if (!isResizing || !signaturePreview) return;
-  
+
   const deltaX = e.clientX - dragStartX;
-  const deltaY = e.clientY - dragStartY;
-  
+
+  const MIN_WIDTH = 80;
+  const MAX_WIDTH = 320;
+
   const currentWidth = parseInt(signaturePreview.style.width);
   const currentHeight = parseInt(signaturePreview.style.height);
   const currentLeft = parseInt(signaturePreview.style.left);
-  const currentTop = parseInt(signaturePreview.style.top);
-  
-  // Calculate aspect ratio
-  const aspectRatio = currentWidth / currentHeight;
-  
-  // ALWAYS maintain aspect ratio (no Shift needed)
-  
-  if (resizeHandle.includes('e')) {
-    const newWidth = currentWidth + deltaX;
-    const newHeight = newWidth / aspectRatio;
-    signaturePreview.style.width = newWidth + 'px';
-    signaturePreview.style.height = newHeight + 'px';
-  }
-  
+
+  // Kekalkan ratio asal
+  const aspectRatio = currentHeight / currentWidth;
+
+  let newWidth = currentWidth + deltaX;
+
+  // Hadkan saiz
+  newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
+
+  const newHeight = newWidth * aspectRatio;
+
+  signaturePreview.style.width = newWidth + 'px';
+  signaturePreview.style.height = newHeight + 'px';
+
+  // Jika resize dari kiri
   if (resizeHandle.includes('w')) {
-    const newWidth = currentWidth - deltaX;
-    const newHeight = newWidth / aspectRatio;
-    signaturePreview.style.width = newWidth + 'px';
-    signaturePreview.style.height = newHeight + 'px';
     signaturePreview.style.left = (currentLeft + deltaX) + 'px';
   }
-  
-  if (resizeHandle.includes('s')) {
-    const newHeight = currentHeight + deltaY;
-    const newWidth = newHeight * aspectRatio;
-    signaturePreview.style.height = newHeight + 'px';
-    signaturePreview.style.width = newWidth + 'px';
-  }
-  
-  if (resizeHandle.includes('n')) {
-    const newHeight = currentHeight - deltaY;
-    const newWidth = newHeight * aspectRatio;
-    signaturePreview.style.height = newHeight + 'px';
-    signaturePreview.style.width = newWidth + 'px';
-    signaturePreview.style.top = (currentTop + deltaY) + 'px';
-  }
-  
+
   dragStartX = e.clientX;
-  dragStartY = e.clientY;
 });
-// Global TOUCH resize listener - IMPROVED SENSITIVITY
+
+// ============================================
+// RESIZE (TOUCH) – TABLET FRIENDLY & SLOW
+// ============================================
 document.addEventListener('touchmove', (e) => {
   if (!isResizing || !signaturePreview) return;
-  
+
   const touch = e.touches[0];
-  const deltaX = touch.clientX - dragStartX;
-  const deltaY = touch.clientY - dragStartY;
-  
-  // SLOW DOWN for better tablet control
-  const SENSITIVITY = 0.6;
-  const adjustedDeltaX = deltaX * SENSITIVITY;
-  const adjustedDeltaY = deltaY * SENSITIVITY;
-  
+
+  const SENSITIVITY = 0.25; // PERLAHAN & STABIL
+  const deltaX = (touch.clientX - dragStartX) * SENSITIVITY;
+
+  const MIN_WIDTH = 80;
+  const MAX_WIDTH = 320;
+
   const currentWidth = parseInt(signaturePreview.style.width);
   const currentHeight = parseInt(signaturePreview.style.height);
   const currentLeft = parseInt(signaturePreview.style.left);
-  const currentTop = parseInt(signaturePreview.style.top);
-  
-  const aspectRatio = currentWidth / currentHeight;
-  
-  if (resizeHandle.includes('e')) {
-    const newWidth = currentWidth + adjustedDeltaX;
-    const newHeight = newWidth / aspectRatio;
-    signaturePreview.style.width = newWidth + 'px';
-    signaturePreview.style.height = newHeight + 'px';
-  }
-  
+
+  const aspectRatio = currentHeight / currentWidth;
+
+  let newWidth = currentWidth + deltaX;
+  newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
+
+  const newHeight = newWidth * aspectRatio;
+
+  signaturePreview.style.width = newWidth + 'px';
+  signaturePreview.style.height = newHeight + 'px';
+
   if (resizeHandle.includes('w')) {
-    const newWidth = currentWidth - adjustedDeltaX;
-    const newHeight = newWidth / aspectRatio;
-    signaturePreview.style.width = newWidth + 'px';
-    signaturePreview.style.height = newHeight + 'px';
-    signaturePreview.style.left = (currentLeft + adjustedDeltaX) + 'px';
+    signaturePreview.style.left = (currentLeft + deltaX) + 'px';
   }
-  
-  if (resizeHandle.includes('s')) {
-    const newHeight = currentHeight + adjustedDeltaY;
-    const newWidth = newHeight * aspectRatio;
-    signaturePreview.style.height = newHeight + 'px';
-    signaturePreview.style.width = newWidth + 'px';
-  }
-  
-  if (resizeHandle.includes('n')) {
-    const newHeight = currentHeight - adjustedDeltaY;
-    const newWidth = newHeight * aspectRatio;
-    signaturePreview.style.height = newHeight + 'px';
-    signaturePreview.style.width = newWidth + 'px';
-    signaturePreview.style.top = (currentTop + adjustedDeltaY) + 'px';
-  }
-  
+
   dragStartX = touch.clientX;
-  dragStartY = touch.clientY;
   e.preventDefault();
 }, { passive: false });
+
 
 document.addEventListener('mouseup', stopDrag);
 document.addEventListener('touchend', stopDrag);
