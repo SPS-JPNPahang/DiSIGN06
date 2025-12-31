@@ -203,7 +203,7 @@ function updateButtonsAfterSignature() {
   }
   
   // Change REJECT to BATAL (cancel signature)
-  const rejectBtn = document.querySelector('button[onclick="rejectRequest()"]');
+  const rejectBtn = document.getElementById('rejectBtn');
   if (rejectBtn) {
     rejectBtn.textContent = '🔄 BATAL TANDATANGAN';
     rejectBtn.className = 'flex-1 bg-gray-500 text-white py-4 rounded-lg font-bold text-lg hover:bg-gray-600 transition-smooth';
@@ -241,11 +241,11 @@ function resetButtons() {
   }
   
   // Reset REJECT button
-  const cancelBtn = document.querySelector('button[onclick="cancelSignature"]');
-  if (cancelBtn) {
-    cancelBtn.textContent = '✗ TOLAK';
-    cancelBtn.className = 'flex-1 bg-red-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-red-700 transition-smooth';
-    cancelBtn.onclick = rejectRequest;
+  const rejectBtn = document.getElementById('rejectBtn');
+  if (rejectBtn) {
+    rejectBtn.textContent = '✗ TOLAK';
+    rejectBtn.className = 'flex-1 bg-red-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-red-700 transition-smooth';
+    rejectBtn.onclick = rejectRequest;
   }
   
   // Hide PREVIEW button
