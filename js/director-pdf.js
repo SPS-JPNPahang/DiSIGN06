@@ -581,6 +581,59 @@ document.addEventListener('mousemove', (e) => {
   dragStartX = e.clientX;
   dragStartY = e.clientY;
 });
+// Global TOUCH resize listener - ALWAYS proportional
+document.addEventListener('touchmove', (e) => {
+  if (!isResizing || !signaturePreview) return;
+  
+  const touch = e.touches[0];
+  const deltaX = touch.clientX - dragStartX;
+  const deltaY = touch.clientY - dragStartY;
+  
+  const currentWidth = parseInt(signaturePreview.style.width);
+  const currentHeight = parseInt(signaturePreview.style.height);
+  const currentLeft = parseInt(signaturePreview.style.left);
+  const currentTop = parseInt(signaturePreview.style.top);
+  
+  // Calculate aspect ratio
+  const aspectRatio = currentWidth / currentHeight;
+  
+  // ALWAYS maintain aspect ratio
+  
+  if (resizeHandle.includes('e')) {
+    const newWidth = currentWidth + deltaX;
+    const newHeight = newWidth / aspectRatio;
+    signaturePreview.style.width = newWidth + 'px';
+    signaturePreview.style.height = newHeight + 'px';
+  }
+  
+  if (resizeHandle.includes('w')) {
+    const newWidth = currentWidth - deltaX;
+    const newHeight = newWidth / aspectRatio;
+    signaturePreview.style.width = newWidth + 'px';
+    signaturePreview.style.height = newHeight + 'px';
+    signaturePreview.style.left = (currentLeft + deltaX) + 'px';
+  }
+  
+  if (resizeHandle.includes('s')) {
+    const newHeight = currentHeight + deltaY;
+    const newWidth = newHeight * aspectRatio;
+    signaturePreview.style.height = newHeight + 'px';
+    signaturePreview.style.width = newWidth + 'px';
+  }
+  
+  if (resizeHandle.includes('n')) {
+    const newHeight = currentHeight - deltaY;
+    const newWidth = newHeight * aspectRatio;
+    signaturePreview.style.height = newHeight + 'px';
+    signaturePreview.style.width = newWidth + 'px';
+    signaturePreview.style.top = (currentTop + deltaY) + 'px';
+  }
+  
+  dragStartX = touch.clientX;
+  dragStartY = touch.clientY;
+  
+  e.preventDefault(); // Prevent scroll
+}, { passive: false }); // Allow preventDefault
 
 document.addEventListener('mouseup', stopDrag);
 document.addEventListener('touchend', stopDrag);
@@ -854,3 +907,4 @@ async function uploadSignedPdf(base64Data) {
     Toast.error('Ralat: ' + err.message);
   }
 }
+
