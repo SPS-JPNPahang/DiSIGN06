@@ -581,7 +581,7 @@ document.addEventListener('mousemove', (e) => {
   dragStartX = e.clientX;
   dragStartY = e.clientY;
 });
-// Global TOUCH resize listener - ALWAYS proportional
+// Global TOUCH resize listener - IMPROVED SENSITIVITY
 document.addEventListener('touchmove', (e) => {
   if (!isResizing || !signaturePreview) return;
   
@@ -589,51 +589,52 @@ document.addEventListener('touchmove', (e) => {
   const deltaX = touch.clientX - dragStartX;
   const deltaY = touch.clientY - dragStartY;
   
+  // SLOW DOWN for better tablet control
+  const SENSITIVITY = 0.6;
+  const adjustedDeltaX = deltaX * SENSITIVITY;
+  const adjustedDeltaY = deltaY * SENSITIVITY;
+  
   const currentWidth = parseInt(signaturePreview.style.width);
   const currentHeight = parseInt(signaturePreview.style.height);
   const currentLeft = parseInt(signaturePreview.style.left);
   const currentTop = parseInt(signaturePreview.style.top);
   
-  // Calculate aspect ratio
   const aspectRatio = currentWidth / currentHeight;
   
-  // ALWAYS maintain aspect ratio
-  
   if (resizeHandle.includes('e')) {
-    const newWidth = currentWidth + deltaX;
+    const newWidth = currentWidth + adjustedDeltaX;
     const newHeight = newWidth / aspectRatio;
     signaturePreview.style.width = newWidth + 'px';
     signaturePreview.style.height = newHeight + 'px';
   }
   
   if (resizeHandle.includes('w')) {
-    const newWidth = currentWidth - deltaX;
+    const newWidth = currentWidth - adjustedDeltaX;
     const newHeight = newWidth / aspectRatio;
     signaturePreview.style.width = newWidth + 'px';
     signaturePreview.style.height = newHeight + 'px';
-    signaturePreview.style.left = (currentLeft + deltaX) + 'px';
+    signaturePreview.style.left = (currentLeft + adjustedDeltaX) + 'px';
   }
   
   if (resizeHandle.includes('s')) {
-    const newHeight = currentHeight + deltaY;
+    const newHeight = currentHeight + adjustedDeltaY;
     const newWidth = newHeight * aspectRatio;
     signaturePreview.style.height = newHeight + 'px';
     signaturePreview.style.width = newWidth + 'px';
   }
   
   if (resizeHandle.includes('n')) {
-    const newHeight = currentHeight - deltaY;
+    const newHeight = currentHeight - adjustedDeltaY;
     const newWidth = newHeight * aspectRatio;
     signaturePreview.style.height = newHeight + 'px';
     signaturePreview.style.width = newWidth + 'px';
-    signaturePreview.style.top = (currentTop + deltaY) + 'px';
+    signaturePreview.style.top = (currentTop + adjustedDeltaY) + 'px';
   }
   
   dragStartX = touch.clientX;
   dragStartY = touch.clientY;
-  
-  e.preventDefault(); // Prevent scroll
-}, { passive: false }); // Allow preventDefault
+  e.preventDefault();
+}, { passive: false });
 
 document.addEventListener('mouseup', stopDrag);
 document.addEventListener('touchend', stopDrag);
@@ -907,4 +908,3 @@ async function uploadSignedPdf(base64Data) {
     Toast.error('Ralat: ' + err.message);
   }
 }
-
