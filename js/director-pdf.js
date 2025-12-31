@@ -569,7 +569,7 @@ document.addEventListener('touchmove', (e) => {
 
   // === RESIZE MODE (PERLAHAN) ===
   if (isResizing && !isDragging) {
-    const SENSITIVITY = 0.4; // Increase from 0.25 to 0.4 for better response
+    const SENSITIVITY = 1.5; // Increase from 0.25 to 0.4 for better response
     
     const rawDeltaX = touch.clientX - dragStartX;
     const deltaX = rawDeltaX * SENSITIVITY;
@@ -893,3 +893,4 @@ async function uploadSignedPdf(base64Data) {
     Toast.error('Ralat: ' + err.message);
   }
 }
+
