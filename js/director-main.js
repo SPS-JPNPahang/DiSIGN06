@@ -262,6 +262,9 @@ function resetButtons() {
 }
 
 function cancelSignature() {
+  // Prevent duplicate modals
+  if (document.querySelector('.fixed.inset-0.bg-black.bg-opacity-75')) return;
+  
   // Show confirmation modal
   const modal = document.createElement('div');
   modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50';
