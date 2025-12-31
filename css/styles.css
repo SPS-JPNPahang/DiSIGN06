@@ -153,12 +153,13 @@
 
 .resize-handle {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 20px;  /* ← BIGGER for touch */
+  height: 20px; /* ← BIGGER for touch */
   background: #3b82f6;
   border: 2px solid white;
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  touch-action: none; /* ← Prevent default touch behavior */
 }
 
 .resize-handle:hover {
@@ -166,10 +167,10 @@
   transform: scale(1.2);
 }
 
-.resize-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
-.resize-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
-.resize-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
-.resize-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+.resize-handle.nw { top: -10px; left: -10px; cursor: nw-resize; }
+.resize-handle.ne { top: -10px; right: -10px; cursor: ne-resize; }
+.resize-handle.sw { bottom: -10px; left: -10px; cursor: sw-resize; }
+.resize-handle.se { bottom: -10px; right: -10px; cursor: se-resize; }
 
 /* === BUTTONS === */
 .btn {
@@ -311,10 +312,25 @@
   }
   
   .resize-handle {
-    width: 16px;
-    height: 16px;
+   width: 28px;
+    height: 28px;
   }
 }
+
+/* Touch devices: Even larger handles */
+@media (hover: none) and (pointer: coarse) {
+  .resize-handle {
+    width: 32px;
+    height: 32px;
+    border: 3px solid white;
+  }
+  
+  .resize-handle.nw { top: -16px; left: -16px; }
+  .resize-handle.ne { top: -16px; right: -16px; }
+  .resize-handle.sw { bottom: -16px; left: -16px; }
+  .resize-handle.se { bottom: -16px; right: -16px; }
+}
+
 /* === NAVIGATION DROPDOWN === */
 .nav-dropdown-item {
   display: block;
@@ -661,4 +677,5 @@ body > * {
 #viewerScreen ~ footer {
   display: none;
 }
+
 
