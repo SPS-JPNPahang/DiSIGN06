@@ -28,7 +28,7 @@ const CONFIG = {
   SIGNATURE: {
     DEFAULT_WIDTH: 200,
     DEFAULT_HEIGHT: 80,
-    LINE_WIDTH: 3,
+    LINE_WIDTH: 3.5,
     LINE_COLOR: '#000000'
   }
 };
