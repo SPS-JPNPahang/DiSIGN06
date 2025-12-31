@@ -597,7 +597,7 @@ document.addEventListener('touchmove', (e) => {
     signaturePreview.style.width = newWidth + 'px';
     signaturePreview.style.height = newHeight + 'px';
 
-    dragStartX = touch.clientX; // Update for next move
+    //dragStartX = touch.clientX; // Update for next move
     
     e.preventDefault();
     return;
@@ -893,4 +893,5 @@ async function uploadSignedPdf(base64Data) {
     Toast.error('Ralat: ' + err.message);
   }
 }
+
 
