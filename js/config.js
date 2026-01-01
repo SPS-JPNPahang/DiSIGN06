@@ -18,7 +18,7 @@ const CONFIG = {
   
   // PDF settings
   PDF: {
-    DEFAULT_ZOOM: 0.5,
+    DEFAULT_ZOOM: 1.0,
     MIN_ZOOM: 0.5,
     MAX_ZOOM: 3.0,
     ZOOM_STEP: 0.25
@@ -155,3 +155,4 @@ const Utils = {
     return true;
   }
 };
+
