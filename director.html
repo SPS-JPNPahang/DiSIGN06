@@ -168,7 +168,7 @@
     </div>
     
     <!-- Action Buttons -->
-    <div class="flex gap-3 flex-wrap">
+    <div id="viewerActionButtons" class="flex gap-3 flex-wrap">
       <button 
         onclick="showSignaturePad()" 
         class="flex-1 min-w-[200px] bg-green-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-green-700 transition-smooth btn"
@@ -177,14 +177,6 @@
       </button>
       <button id="rejectBtn" onclick="rejectRequest()" class="flex-1 bg-red-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-red-700 transition-smooth">
         ✗ TOLAK
-      </button>
-
-      <button 
-        id="toggleSignatureMove"
-        class="flex-1 min-w-[200px] bg-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-smooth btn"
-        disabled
-      >
-        🔒 KUNCI TANDATANGAN
       </button>
 
     </div>
@@ -310,6 +302,7 @@
 </script>
 
 <script src="js/config.js"></script>
+<script src="js/debug.js"></script>
 <script src="js/director-main.js"></script>
 <script src="js/director-pdf.js"></script>
 
