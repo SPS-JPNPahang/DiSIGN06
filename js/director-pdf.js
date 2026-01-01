@@ -32,6 +32,10 @@ let activePointerId = null;
 // ✅ LOCK STATE
 let signatureLocked = true;  // Default: LOCKED
 let lockIcon = null;
+// ✅ RAF (RequestAnimationFrame) untuk smooth drag
+let rafId = null;
+let pendingX = null;
+let pendingY = null;
 
 // ============================================
 // VIEW REQUEST & LOAD PDF
@@ -555,41 +559,43 @@ document.addEventListener('pointermove', (e) => {
   if (!signaturePreview) return;
   if (e.pointerId !== activePointerId) return;
 
+  // ✅ PREVENT SCROLL bila drag/resize active
+  if (isDragging || isResizing) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
   // ======================
-  // DRAG (with threshold)
+  // DRAG (with RAF)
   // ======================
   if (isDragging && !isResizing) {
-    // ✅ THRESHOLD CHECK: Minimum 5px movement sebelum mula drag
     if (!hasMoved) {
       const dx = Math.abs(e.clientX - initialPointerX);
       const dy = Math.abs(e.clientY - initialPointerY);
       
-      // Jika belum sampai 5px total movement, skip
       if (dx + dy < 5) {
         return;
       }
       
-      // ✅ Threshold passed - activate drag
       hasMoved = true;
     }
     
-    // ✅ Apply drag (selepas threshold)
-    signaturePreview.style.left = (e.clientX - dragStartX) + 'px';
-    signaturePreview.style.top = (e.clientY - dragStartY) + 'px';
+    // ✅ STORE position, render nanti via RAF
+    pendingX = e.clientX - dragStartX;
+    pendingY = e.clientY - dragStartY;
     
-    e.preventDefault();
-    e.stopPropagation();
+    // ✅ Request animation frame (smooth 60fps)
+    if (!rafId) {
+      rafId = requestAnimationFrame(updateSignaturePosition);
+    }
+    
     return;
   }
 
   // ======================
-  // RESIZE (kekal sama)
+  // RESIZE (with RAF)
   // ======================
   if (isResizing) {
-    const STEP = 1.5;
-    const MIN_WIDTH = 80;
-    const MAX_WIDTH = 400;
-
     const deltaX = e.clientX - lastPointerX;
     if (Math.abs(deltaX) < 2) return;
 
@@ -599,19 +605,48 @@ document.addEventListener('pointermove', (e) => {
     const h = parseFloat(signaturePreview.style.height);
     const ratio = w / h;
 
+    const STEP = 1.5;
+    const MIN_WIDTH = 80;
+    const MAX_WIDTH = 400;
+
     let newWidth = w + Math.sign(deltaX) * STEP;
     newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
 
+    // ✅ Update directly (resize less frequent than drag)
     signaturePreview.style.width = newWidth + 'px';
     signaturePreview.style.height = (newWidth / ratio) + 'px';
-    
-    e.preventDefault();
-    e.stopPropagation();
   }
 });
 
+// ✅ RAF UPDATE FUNCTION (smooth 60fps rendering)
+function updateSignaturePosition() {
+  if (pendingX !== null && pendingY !== null && signaturePreview) {
+    signaturePreview.style.left = pendingX + 'px';
+    signaturePreview.style.top = pendingY + 'px';
+  }
+  
+  // Reset
+  rafId = null;
+  pendingX = null;
+  pendingY = null;
+}
+
 document.addEventListener('pointerup', (e) => {
   if (e.pointerId !== activePointerId) return;
+
+  // ✅ Cancel pending RAF
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+  
+  // ✅ Final position update (jika ada pending)
+  if (pendingX !== null && pendingY !== null && signaturePreview) {
+    signaturePreview.style.left = pendingX + 'px';
+    signaturePreview.style.top = pendingY + 'px';
+    pendingX = null;
+    pendingY = null;
+  }
 
   // ✅ Release capture
   if (signaturePreview && activePointerId !== null) {
@@ -629,6 +664,7 @@ document.addEventListener('pointerup', (e) => {
   lastPointerX = null;
   activePointerId = null;
 });
+
 // ✅ AUTO-LOCK when clicking outside signature
 document.addEventListener('click', (e) => {
   if (!signaturePreview || signatureLocked) return;
@@ -665,14 +701,19 @@ function removeSignaturePreview() {
     signaturePreview.remove();
     signaturePreview = null;
   }
-
+// ✅ Cancel RAF bila remove
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
   // Reset semua drag/resize states
   isDragging = false;
   isResizing = false;
   hasMoved = false;
   activePointerId = null;
   lastPointerX = null;
-  
+  pendingX = null;  // ✅ TAMBAH
+  pendingY = null;  // ✅ TAMBAH
   // Reset lock states
   signatureLocked = true;
   lockIcon = null;
