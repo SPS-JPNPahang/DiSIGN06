@@ -175,12 +175,18 @@
       >
         ✍️ TANDATANGAN
       </button>
-      <button 
-        onclick="rejectRequest()" 
-        class="flex-1 min-w-[200px] bg-red-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-red-700 transition-smooth btn"
-      >
+      <button id="rejectBtn" onclick="rejectRequest()" class="flex-1 bg-red-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-red-700 transition-smooth">
         ✗ TOLAK
       </button>
+
+      <button 
+        id="toggleSignatureMove"
+        class="flex-1 min-w-[200px] bg-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-smooth btn"
+        disabled
+      >
+        🔒 KUNCI TANDATANGAN
+      </button>
+
     </div>
   </div>
 </div>
