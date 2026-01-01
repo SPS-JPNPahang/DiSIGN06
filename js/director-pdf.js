@@ -25,6 +25,7 @@ let dragStartY = 0;
 let resizeHandle = null;
 let lastPointerX = null;
 let activePointerId = null;
+let signatureUnlocked = false;
 
 // ============================================
 // VIEW REQUEST & LOAD PDF
@@ -441,9 +442,16 @@ function placeSignatureOnPdf() {
   signaturePreview.addEventListener('pointerdown', onPointerDown);
 
   updateButtonsAfterSignature();
+  const btn = document.getElementById('toggleSignatureMove');
+  if (btn) {
+  btn.disabled = false;
+  btn.textContent = '🔒 KUNCI TANDATANGAN';
+}
+
   Toast.success('Tandatangan diletakkan. Seret atau resize.');
 }
 function onPointerDown(e) {
+  if (!signatureUnlocked) return;
   if (!signaturePreview) return;
 
   activePointerId = e.pointerId;
@@ -811,4 +819,3 @@ async function uploadSignedPdf(base64Data) {
     Toast.error('Ralat: ' + err.message);
   }
 }
-
