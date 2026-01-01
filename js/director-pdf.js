@@ -150,8 +150,25 @@ async function renderPage() {
     
     pdfContext = canvas.getContext('2d');
     
-    // Simple viewport calculation - respect user's zoom level
-    const viewport = page.getViewport({scale: currentZoom * 1.5});
+    // ================================
+    // ✅ FIT PDF TO CONTAINER WIDTH
+    // ================================
+    const container = document.getElementById('pdfViewerContainer');
+
+    // Original PDF size (scale = 1)
+    const unscaledViewport = page.getViewport({ scale: 1 });
+
+    // Lebar container sebenar
+    const containerWidth = container.clientWidth;
+
+    // Scale supaya PDF hampir penuh lebar (90% for padding)
+    const fitScale = (containerWidth * 0.9) / unscaledViewport.width;
+
+    // Apply zoom as multiplier
+    const finalScale = fitScale * currentZoom;
+
+    // Final viewport
+    const viewport = page.getViewport({ scale: finalScale });
     
     canvas.width = viewport.width;
     canvas.height = viewport.height;
@@ -468,8 +485,42 @@ function placeSignatureOnPdf() {
   // ✅ Reset lock state
   signatureLocked = true;
 
+  
+  // ✅ ENHANCEMENT: Tap-to-Place for fast positioning
+  const pdfCanvas = document.getElementById('pdfCanvas');
+  
+  // Remove old listener if exists (prevent duplicates)
+  if (pdfCanvas._tapToPlaceHandler) {
+    pdfCanvas.removeEventListener('click', pdfCanvas._tapToPlaceHandler);
+  }
+  
+  // Create new handler
+  pdfCanvas._tapToPlaceHandler = function(e) {
+    // Only work bila unlocked & not currently dragging
+    if (!signatureLocked && !isDragging && signaturePreview) {
+      const rect = pdfCanvas.getBoundingClientRect();
+      
+      // Center signature on tap point
+      const sigWidth = signaturePreview.offsetWidth;
+      const sigHeight = signaturePreview.offsetHeight;
+      
+      const x = e.clientX - rect.left - (sigWidth / 2);
+      const y = e.clientY - rect.top - (sigHeight / 2);
+      
+      // INSTANT positioning (no animation)
+      signaturePreview.style.left = Math.max(0, x) + 'px';
+      signaturePreview.style.top = Math.max(0, y) + 'px';
+      
+      DSLOG('Tap-to-place', { x, y });
+      Toast.info('Tap lagi untuk adjust, atau drag untuk fine-tune');
+    }
+  };
+  
+  // Attach listener
+  pdfCanvas.addEventListener('click', pdfCanvas._tapToPlaceHandler);
+
   updateButtonsAfterSignature();
-  Toast.success('Tandatangan diletakkan di bawah (🔒 locked). Klik ikon untuk edit.');
+  Toast.success('💡 Tandatangan diletakkan. Unlock untuk TAP atau DRAG ke posisi.');
 }
 // ============================================
 // LOCK/UNLOCK SIGNATURE
@@ -512,7 +563,7 @@ function toggleLock(e) {
     // ✅ FREEZE PDF SCROLL
     if (container) container.classList.add('editing-signature');
     
-    Toast.info('Edit mode — PDF frozen, boleh drag/resize');
+    Toast.info('💡 TAP PDF untuk pindah, atau DRAG untuk fine-tune');
   }
 }
 
@@ -698,6 +749,13 @@ function removeSignaturePreview() {
   console.log('🔴 removeSignaturePreview() DIPANGGIL');
   
   if (signaturePreview) {
+    // ✅ CLEANUP: Remove tap-to-place listener
+    const pdfCanvas = document.getElementById('pdfCanvas');
+    if (pdfCanvas && pdfCanvas._tapToPlaceHandler) {
+      pdfCanvas.removeEventListener('click', pdfCanvas._tapToPlaceHandler);
+      pdfCanvas._tapToPlaceHandler = null;
+    }
+    
     signaturePreview.remove();
     signaturePreview = null;
   }
