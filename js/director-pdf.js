@@ -22,9 +22,16 @@ let isDragging = false;
 let isResizing = false;
 let dragStartX = 0;
 let dragStartY = 0;
+let initialPointerX = 0;  // ✅ TAMBAH: tracking awal
+let initialPointerY = 0;  // ✅ TAMBAH: tracking awal
+let hasMoved = false;     // ✅ TAMBAH: threshold flag
 let resizeHandle = null;
 let lastPointerX = null;
 let activePointerId = null;
+
+// ✅ LOCK STATE
+let signatureLocked = true;  // Default: LOCKED
+let lockIcon = null;
 
 // ============================================
 // VIEW REQUEST & LOAD PDF
@@ -419,7 +426,7 @@ function placeSignatureOnPdf() {
   }
 
   signaturePreview = document.createElement('div');
-  signaturePreview.className = 'signature-preview';
+  signaturePreview.className = 'signature-preview locked';  // ✅ Default locked
   signaturePreview.style.width = CONFIG.SIGNATURE.DEFAULT_WIDTH + 'px';
   signaturePreview.style.height = CONFIG.SIGNATURE.DEFAULT_HEIGHT + 'px';
   signaturePreview.style.left = '50px';
@@ -430,38 +437,105 @@ function placeSignatureOnPdf() {
   img.draggable = false;
   signaturePreview.appendChild(img);
 
-  // SATU handle resize sahaja (SE)
+  // ✅ LOCK ICON (top-right)
+  lockIcon = document.createElement('div');
+  lockIcon.className = 'lock-icon';
+  lockIcon.innerHTML = '🔒';
+  lockIcon.title = 'Klik untuk unlock/lock';
+  lockIcon.onclick = toggleLock;
+  signaturePreview.appendChild(lockIcon);
+
+  // RESIZE HANDLE (initially hidden - locked)
   const handle = document.createElement('div');
   handle.className = 'resize-handle se';
+  handle.style.display = 'none';  // ✅ Hidden when locked
   signaturePreview.appendChild(handle);
 
   container.appendChild(signaturePreview);
-  // 🔒 Signature boleh gerak, tapi JANGAN blok butang bawah
+  
   signaturePreview.style.pointerEvents = 'auto';
-  // 🔑 HANYA SATU EVENT DI SINI
   signaturePreview.addEventListener('pointerdown', onPointerDown);
 
+  // ✅ Reset lock state
+  signatureLocked = true;
+
   updateButtonsAfterSignature();
-  Toast.success('Tandatangan diletakkan. Seret atau resize.');
+  Toast.success('Tandatangan diletakkan (🔒 locked). Klik ikon untuk edit.');
 }
+// ============================================
+// LOCK/UNLOCK SIGNATURE
+// ============================================
+function toggleLock(e) {
+  e.stopPropagation();  // Prevent triggering drag
+  
+  if (!signaturePreview || !lockIcon) return;
+  
+  signatureLocked = !signatureLocked;
+  
+  DSLOG('toggleLock', { locked: signatureLocked });
+  
+  if (signatureLocked) {
+    // LOCK
+    signaturePreview.classList.remove('unlocked');
+    signaturePreview.classList.add('locked');
+    lockIcon.innerHTML = '🔒';
+    
+    // Hide resize handle
+    const handle = signaturePreview.querySelector('.resize-handle');
+    if (handle) handle.style.display = 'none';
+    
+    Toast.info('Signature locked');
+  } else {
+    // UNLOCK
+    signaturePreview.classList.remove('locked');
+    signaturePreview.classList.add('unlocked');
+    lockIcon.innerHTML = '🔓';
+    
+    // Show resize handle
+    const handle = signaturePreview.querySelector('.resize-handle');
+    if (handle) handle.style.display = 'block';
+    
+    Toast.info('Signature unlocked — boleh drag/resize');
+  }
+}
+
+// ============================================
+// SIGNATURE PLACEMENT (DRAG & RESIZE)
+// ============================================
 function onPointerDown(e) {
   if (!signaturePreview) return;
 
+  // ✅ CHECK LOCK STATE
+  if (signatureLocked) {
+    DSLOG('onPointerDown BLOCKED', { reason: 'signature locked' });
+    return;  // Do nothing if locked
+  }
+
+  // ✅ Capture pointer untuk consistency
   activePointerId = e.pointerId;
   signaturePreview.setPointerCapture(activePointerId);
 
   if (e.target.classList.contains('resize-handle')) {
+    // RESIZE mode
     isResizing = true;
     isDragging = false;
+    hasMoved = false;
     lastPointerX = e.clientX;
   } else {
+    // DRAG mode - setup
     isDragging = true;
     isResizing = false;
+    hasMoved = false;
+    
+    initialPointerX = e.clientX;
+    initialPointerY = e.clientY;
+    
     dragStartX = e.clientX - signaturePreview.offsetLeft;
     dragStartY = e.clientY - signaturePreview.offsetTop;
   }
 
   e.preventDefault();
+  e.stopPropagation();
 }
 
 document.addEventListener('pointermove', (e) => {
@@ -469,18 +543,34 @@ document.addEventListener('pointermove', (e) => {
   if (e.pointerId !== activePointerId) return;
 
   // ======================
-  // DRAG
+  // DRAG (with threshold)
   // ======================
   if (isDragging && !isResizing) {
-    signaturePreview.style.left =
-      (e.clientX - dragStartX) + 'px';
-    signaturePreview.style.top =
-      (e.clientY - dragStartY) + 'px';
+    // ✅ THRESHOLD CHECK: Minimum 5px movement sebelum mula drag
+    if (!hasMoved) {
+      const dx = Math.abs(e.clientX - initialPointerX);
+      const dy = Math.abs(e.clientY - initialPointerY);
+      
+      // Jika belum sampai 5px total movement, skip
+      if (dx + dy < 5) {
+        return;
+      }
+      
+      // ✅ Threshold passed - activate drag
+      hasMoved = true;
+    }
+    
+    // ✅ Apply drag (selepas threshold)
+    signaturePreview.style.left = (e.clientX - dragStartX) + 'px';
+    signaturePreview.style.top = (e.clientY - dragStartY) + 'px';
+    
+    e.preventDefault();
+    e.stopPropagation();
     return;
   }
 
   // ======================
-  // RESIZE (STABIL)
+  // RESIZE (kekal sama)
   // ======================
   if (isResizing) {
     const STEP = 1.5;
@@ -501,34 +591,83 @@ document.addEventListener('pointermove', (e) => {
 
     signaturePreview.style.width = newWidth + 'px';
     signaturePreview.style.height = (newWidth / ratio) + 'px';
+    
+    e.preventDefault();
+    e.stopPropagation();
   }
 });
 
 document.addEventListener('pointerup', (e) => {
   if (e.pointerId !== activePointerId) return;
 
+  // ✅ Release capture
+  if (signaturePreview && activePointerId !== null) {
+    try {
+      signaturePreview.releasePointerCapture(activePointerId);
+    } catch (err) {
+      // Ignore if already released
+    }
+  }
+
+  // ✅ Reset states
   isDragging = false;
   isResizing = false;
+  hasMoved = false;
   lastPointerX = null;
   activePointerId = null;
 });
-
+// ✅ AUTO-LOCK when clicking outside signature
+document.addEventListener('click', (e) => {
+  if (!signaturePreview || signatureLocked) return;
+  
+  // Check if click is outside signature preview
+  if (!signaturePreview.contains(e.target)) {
+    DSLOG('Auto-lock triggered', { clickedOutside: true });
+    
+    signatureLocked = true;
+    signaturePreview.classList.remove('unlocked');
+    signaturePreview.classList.add('locked');
+    
+    if (lockIcon) lockIcon.innerHTML = '🔒';
+    
+    const handle = signaturePreview.querySelector('.resize-handle');
+    if (handle) handle.style.display = 'none';
+    
+    Toast.info('Signature auto-locked');
+  }
+});
 
 function removeSignaturePreview() {
   DSLOG('removeSignaturePreview', {
-  exists: !!signaturePreview,
-  dataUrl: !!signatureDataUrl
-});
-   console.log('🔴 removeSignaturePreview() DIPANGGIL');
+    exists: !!signaturePreview,
+    dataUrl: !!signatureDataUrl
+  });
+  console.log('🔴 removeSignaturePreview() DIPANGGIL');
+  
   if (signaturePreview) {
+    // ✅ Release capture sebelum remove
+    if (activePointerId !== null) {
+      try {
+        signaturePreview.releasePointerCapture(activePointerId);
+      } catch (err) {
+        // Ignore
+      }
+    }
+    
     signaturePreview.remove();
     signaturePreview = null;
   }
 
+  // ✅ Reset semua drag/resize states
   isDragging = false;
   isResizing = false;
+  hasMoved = false;
   activePointerId = null;
   lastPointerX = null;
+  
+  // ✅ Reset lock states
+  signatureLocked = true;
+  lockIcon = null;
 }
 
 
@@ -823,4 +962,3 @@ async function uploadSignedPdf(base64Data) {
     Toast.error('Ralat: ' + err.message);
   }
 }
-
