@@ -167,19 +167,53 @@
       </div>
     </div>
     
-    <!-- Action Buttons -->
-    <div id="viewerActionButtons" class="flex gap-3 flex-wrap">
-      <button 
-        onclick="showSignaturePad()" 
-        class="flex-1 min-w-[200px] bg-green-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-green-700 transition-smooth btn"
-      >
-        ✍️ TANDATANGAN
-      </button>
-      <button id="rejectBtn" onclick="rejectRequest()" class="flex-1 bg-red-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-red-700 transition-smooth">
-        ✗ TOLAK
-      </button>
-
-    </div>
+<!-- Action Buttons -->
+<div id="viewerActionButtons" class="flex gap-3 flex-wrap">
+  <!-- MARK LOCATION button (initial state) -->
+  <button 
+    id="markLocationBtn"
+    onclick="enterMarkingMode()" 
+    class="flex-1 min-w-[200px] bg-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-smooth btn"
+  >
+    📍 TANDAKAN TEMPAT
+  </button>
+  
+  <!-- SIGN button (initially hidden, shown after marker placed) -->
+  <button 
+    id="signBtn"
+    onclick="showSignaturePad()" 
+    class="hidden flex-1 min-w-[200px] bg-green-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-green-700 transition-smooth btn"
+  >
+    ✏️ TANDATANGAN
+  </button>
+  
+  <!-- CANCEL MARKING button (shown during marking mode) -->
+  <button 
+    id="cancelMarkBtn"
+    onclick="cancelMarkingMode()" 
+    class="hidden flex-1 min-w-[150px] bg-gray-500 text-white py-4 rounded-lg font-bold text-lg hover:bg-gray-600 transition-smooth btn"
+  >
+    ❌ BATAL
+  </button>
+  
+  <!-- CHANGE POSITION button (shown after marker placed) -->
+  <button 
+    id="changePositionBtn"
+    onclick="enterMarkingMode()" 
+    class="hidden flex-1 min-w-[150px] bg-blue-500 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-600 transition-smooth btn"
+  >
+    🔄 UBAH POSISI
+  </button>
+  
+  <!-- REJECT button (always visible) -->
+  <button 
+    id="rejectBtn" 
+    onclick="rejectRequest()" 
+    class="flex-1 min-w-[150px] bg-red-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-red-700 transition-smooth"
+  >
+    ✗ TOLAK
+  </button>
+</div>
   </div>
 </div>
 
