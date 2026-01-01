@@ -29,7 +29,8 @@ const CONFIG = {
     DEFAULT_WIDTH: 200,
     DEFAULT_HEIGHT: 80,
     LINE_WIDTH: 3.5,
-    LINE_COLOR: '#000000'
+    LINE_COLOR: '#000000',
+    LOCK_ICON_SIZE: 24
   }
 };
 
