@@ -199,9 +199,7 @@
   transform: scale(0.95);
 }
 
-/* ========================================
-   ✅ TAMBAH INI (FREEZE PDF DURING EDIT)
-   ======================================== */
+/* FREEZE PDF DURING EDIT */
 #pdfViewerContainer.editing-signature {
   overflow: hidden !important;
   pointer-events: none;
@@ -210,8 +208,76 @@
 #pdfViewerContainer.editing-signature .signature-preview {
   pointer-events: auto;
 }
-/* ======================================== */
 
+/* ========================================
+   ✅ MARKING MODE & MARKER
+   ======================================== */
+
+/* Marking mode indicator */
+#pdfViewerContainer.marking-mode {
+  cursor: crosshair !important;
+  overflow: hidden !important;
+}
+
+#pdfViewerContainer.marking-mode #pdfCanvas {
+  cursor: crosshair !important;
+}
+
+/* Location marker */
+.location-marker {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: auto;
+  z-index: 15;
+  cursor: move;
+  transition: transform 0.2s;
+}
+
+.location-marker:hover {
+  transform: scale(1.2);
+}
+
+/* Marker visual (red crosshair) */
+.location-marker::before,
+.location-marker::after {
+  content: '';
+  position: absolute;
+  background: #dc2626;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.location-marker::before {
+  /* Vertical line */
+  left: 50%;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+
+.location-marker::after {
+  /* Horizontal line */
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  transform: translateY(-50%);
+}
+
+/* Marker center dot */
+.location-marker .marker-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: #dc2626;
+  border: 2px solid white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
 
 .resize-handle {
   position: absolute;
