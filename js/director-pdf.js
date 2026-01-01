@@ -429,8 +429,13 @@ function placeSignatureOnPdf() {
   signaturePreview.className = 'signature-preview locked';  // ✅ Default locked
   signaturePreview.style.width = CONFIG.SIGNATURE.DEFAULT_WIDTH + 'px';
   signaturePreview.style.height = CONFIG.SIGNATURE.DEFAULT_HEIGHT + 'px';
-  signaturePreview.style.left = '50px';
-  signaturePreview.style.top = '50px';
+  
+  // ✅ SMART POSITIONING: Bottom-left (standard surat rasmi)
+  const canvas = document.getElementById('pdfCanvas');
+  const canvasHeight = canvas ? canvas.offsetHeight : 600;
+  
+  signaturePreview.style.left = '50px';  // Kiri (standard margin)
+  signaturePreview.style.top = (canvasHeight - 150) + 'px';  // Bawah (with margin)
 
   const img = document.createElement('img');
   img.src = signatureDataUrl;
@@ -460,13 +465,13 @@ function placeSignatureOnPdf() {
   signatureLocked = true;
 
   updateButtonsAfterSignature();
-  Toast.success('Tandatangan diletakkan (🔒 locked). Klik ikon untuk edit.');
+  Toast.success('Tandatangan diletakkan di bawah (🔒 locked). Klik ikon untuk edit.');
 }
 // ============================================
 // LOCK/UNLOCK SIGNATURE
 // ============================================
 function toggleLock(e) {
-  e.stopPropagation();  // Prevent triggering drag
+  e.stopPropagation();
   
   if (!signaturePreview || !lockIcon) return;
   
@@ -474,8 +479,10 @@ function toggleLock(e) {
   
   DSLOG('toggleLock', { locked: signatureLocked });
   
+  const container = document.getElementById('pdfViewerContainer');
+  
   if (signatureLocked) {
-    // LOCK
+    // ✅ LOCK — Enable PDF scroll
     signaturePreview.classList.remove('unlocked');
     signaturePreview.classList.add('locked');
     lockIcon.innerHTML = '🔒';
@@ -484,9 +491,12 @@ function toggleLock(e) {
     const handle = signaturePreview.querySelector('.resize-handle');
     if (handle) handle.style.display = 'none';
     
-    Toast.info('Signature locked');
+    // ✅ RESTORE PDF SCROLL
+    if (container) container.classList.remove('editing-signature');
+    
+    Toast.info('Signature locked — PDF boleh scroll');
   } else {
-    // UNLOCK
+    // ✅ UNLOCK — Disable PDF scroll
     signaturePreview.classList.remove('locked');
     signaturePreview.classList.add('unlocked');
     lockIcon.innerHTML = '🔓';
@@ -495,7 +505,10 @@ function toggleLock(e) {
     const handle = signaturePreview.querySelector('.resize-handle');
     if (handle) handle.style.display = 'block';
     
-    Toast.info('Signature unlocked — boleh drag/resize');
+    // ✅ FREEZE PDF SCROLL
+    if (container) container.classList.add('editing-signature');
+    
+    Toast.info('Edit mode — PDF frozen, boleh drag/resize');
   }
 }
 
@@ -633,7 +646,11 @@ document.addEventListener('click', (e) => {
     const handle = signaturePreview.querySelector('.resize-handle');
     if (handle) handle.style.display = 'none';
     
-    Toast.info('Signature auto-locked');
+    // ✅ RESTORE PDF SCROLL
+    const container = document.getElementById('pdfViewerContainer');
+    if (container) container.classList.remove('editing-signature');
+    
+    Toast.info('Signature auto-locked — PDF boleh scroll');
   }
 });
 
@@ -645,29 +662,24 @@ function removeSignaturePreview() {
   console.log('🔴 removeSignaturePreview() DIPANGGIL');
   
   if (signaturePreview) {
-    // ✅ Release capture sebelum remove
-    if (activePointerId !== null) {
-      try {
-        signaturePreview.releasePointerCapture(activePointerId);
-      } catch (err) {
-        // Ignore
-      }
-    }
-    
     signaturePreview.remove();
     signaturePreview = null;
   }
 
-  // ✅ Reset semua drag/resize states
+  // Reset semua drag/resize states
   isDragging = false;
   isResizing = false;
   hasMoved = false;
   activePointerId = null;
   lastPointerX = null;
   
-  // ✅ Reset lock states
+  // Reset lock states
   signatureLocked = true;
   lockIcon = null;
+  
+  // ✅ RESTORE PDF SCROLL (penting bila cancel signature!)
+  const container = document.getElementById('pdfViewerContainer');
+  if (container) container.classList.remove('editing-signature');
 }
 
 
