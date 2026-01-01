@@ -199,6 +199,19 @@
   transform: scale(0.95);
 }
 
+/* ========================================
+   ✅ TAMBAH INI (FREEZE PDF DURING EDIT)
+   ======================================== */
+#pdfViewerContainer.editing-signature {
+  overflow: hidden !important;
+  pointer-events: none;
+}
+
+#pdfViewerContainer.editing-signature .signature-preview {
+  pointer-events: auto;
+}
+/* ======================================== */
+
 
 .resize-handle {
   position: absolute;
