@@ -30,12 +30,19 @@ let lastPointerX = null;
 let activePointerId = null;
 
 // ✅ LOCK STATE
-let signatureLocked = true;  // Default: LOCKED
+let signatureLocked = true;
 let lockIcon = null;
+
 // ✅ RAF (RequestAnimationFrame) untuk smooth drag
 let rafId = null;
 let pendingX = null;
 let pendingY = null;
+
+// ✅ MARKING MODE STATE
+let markingMode = false;
+let locationMarker = null;
+let markerX = null;
+let markerY = null;
 
 // ============================================
 // VIEW REQUEST & LOAD PDF
@@ -237,6 +244,27 @@ function zoomOut() {
 }
 
 function resetPdfViewer() {
+  // ✅ CLEANUP: Reset marking mode
+  if (markingMode) {
+    markingMode = false;
+    const container = document.getElementById('pdfViewerContainer');
+    if (container) container.classList.remove('marking-mode');
+  }
+  
+  // ✅ CLEANUP: Remove location marker
+  removeLocationMarker();
+  
+  // ✅ RESET position variables
+  markerX = null;
+  markerY = null;
+  
+  // ✅ CLEANUP: Reset button states
+  document.getElementById('markLocationBtn')?.classList.remove('hidden');
+  document.getElementById('cancelMarkBtn')?.classList.add('hidden');
+  document.getElementById('changePositionBtn')?.classList.add('hidden');
+  document.getElementById('signBtn')?.classList.add('hidden');
+  
+  // Existing resets
   pdfDocument = null;
   pdfBytes = null;
   currentPage = 1;
@@ -253,7 +281,7 @@ function showSignaturePad() {
   document.getElementById('signatureOverlay').classList.remove('hidden');
   
   const canvas = document.getElementById('signatureCanvas');
-  signatureContext = canvas.getContext('2d');
+  signatureContext = canvas.getContext('2d', { willReadFrequently: true });
   
   // Clear canvas (transparent)
   signatureContext.clearRect(0, 0, canvas.width, canvas.height);
@@ -435,7 +463,197 @@ async function applySignature() {
 }
 
 // ============================================
-// SIGNATURE PLACEMENT (DRAG & RESIZE)
+// MARKING MODE SYSTEM
+// ============================================
+
+function enterMarkingMode() {
+  DSLOG('enterMarkingMode');
+  
+  // Remove existing marker if any
+  removeLocationMarker();
+  
+  // Enter marking mode
+  markingMode = true;
+  
+  const container = document.getElementById('pdfViewerContainer');
+  const pdfCanvas = document.getElementById('pdfCanvas');
+  
+  // Freeze PDF scroll
+  if (container) container.classList.add('marking-mode');
+  
+  // Show instruction
+  Toast.info('💡 TAP PDF untuk tandakan kawasan tandatangan');
+  
+  // Update buttons
+  document.getElementById('markLocationBtn')?.classList.add('hidden');
+  document.getElementById('cancelMarkBtn')?.classList.remove('hidden');
+  document.getElementById('changePositionBtn')?.classList.add('hidden');
+  document.getElementById('signBtn')?.classList.add('hidden');
+  
+  // Add click listener for marking
+  if (!pdfCanvas._markingHandler) {
+    pdfCanvas._markingHandler = function(e) {
+      if (markingMode) {
+        placeLocationMarker(e);
+      }
+    };
+    pdfCanvas.addEventListener('click', pdfCanvas._markingHandler);
+  }
+}
+
+function cancelMarkingMode() {
+  DSLOG('cancelMarkingMode');
+  
+  // Exit marking mode
+  markingMode = false;
+  
+  const container = document.getElementById('pdfViewerContainer');
+  
+  // Restore PDF scroll
+  if (container) container.classList.remove('marking-mode');
+  
+  // Remove marker if any
+  removeLocationMarker();
+  
+  // ✅ RESET position variables
+  markerX = null;
+  markerY = null;
+  
+  // Update buttons (back to initial state)
+  document.getElementById('markLocationBtn')?.classList.remove('hidden');
+  document.getElementById('cancelMarkBtn')?.classList.add('hidden');
+  document.getElementById('changePositionBtn')?.classList.add('hidden');
+  document.getElementById('signBtn')?.classList.add('hidden');
+  
+  Toast.info('Penandaan dibatalkan');
+}
+
+function placeLocationMarker(e) {
+  DSLOG('placeLocationMarker');
+  
+  const pdfCanvas = document.getElementById('pdfCanvas');
+  const container = document.getElementById('pdfViewerContainer');
+  const rect = pdfCanvas.getBoundingClientRect();
+  
+  // ✅ SIMPLE & CORRECT: Rect already scroll-aware
+  markerX = e.clientX - rect.left - 12;
+  markerY = e.clientY - rect.top - 12;
+  
+  DSLOG('Marker position calculated', {
+    clickX: e.clientX,
+    clickY: e.clientY,
+    canvasLeft: rect.left,
+    canvasTop: rect.top,
+    markerX,
+    markerY
+  });
+  
+  // Remove existing marker
+  removeLocationMarker();
+  
+  // Create marker element
+  locationMarker = document.createElement('div');
+  locationMarker.className = 'location-marker';
+  locationMarker.style.left = markerX + 'px';
+  locationMarker.style.top = markerY + 'px';
+  //locationMarker.title = `Position: ${markerX.toFixed(0)}, ${markerY.toFixed(0)}`;
+  
+  // Add center dot
+  const dot = document.createElement('div');
+  dot.className = 'marker-dot';
+  locationMarker.appendChild(dot);
+  
+  // Make marker draggable
+  locationMarker.addEventListener('pointerdown', onMarkerPointerDown);
+  
+  // Append to container
+  container.appendChild(locationMarker);
+  
+  // Exit marking mode
+  markingMode = false;
+  container.classList.remove('marking-mode');
+  
+  // Update buttons
+  document.getElementById('markLocationBtn')?.classList.add('hidden');
+  document.getElementById('cancelMarkBtn')?.classList.add('hidden');
+  document.getElementById('changePositionBtn')?.classList.remove('hidden');
+  document.getElementById('signBtn')?.classList.remove('hidden');
+  
+  Toast.success('✅ Kawasan ditandakan. Klik TANDATANGAN untuk sign.');
+}
+
+function removeLocationMarker() {
+  DSLOG('removeLocationMarker');
+  
+  if (locationMarker) {
+    locationMarker.remove();
+    locationMarker = null;
+  }
+  
+  // ✅ DON'T reset markerX/markerY here
+  // They will be reset in placeSignatureOnPdf() AFTER use
+}
+
+function resetMarkerPosition() {
+  DSLOG('resetMarkerPosition');
+  markerX = null;
+  markerY = null;
+}
+
+// ============================================
+// MARKER DRAG (MICRO-ADJUSTMENT)
+// ============================================
+
+let markerDragging = false;
+let markerDragStartX = 0;
+let markerDragStartY = 0;
+
+function onMarkerPointerDown(e) {
+  if (!locationMarker) return;
+  
+  markerDragging = true;
+  
+  markerDragStartX = e.clientX - locationMarker.offsetLeft;
+  markerDragStartY = e.clientY - locationMarker.offsetTop;
+  
+  locationMarker.setPointerCapture(e.pointerId);
+  
+  e.preventDefault();
+  e.stopPropagation();
+}
+
+document.addEventListener('pointermove', (e) => {
+  if (!markerDragging || !locationMarker) return;
+  
+  const newX = e.clientX - markerDragStartX;
+  const newY = e.clientY - markerDragStartY;
+  
+  locationMarker.style.left = Math.max(0, newX) + 'px';
+  locationMarker.style.top = Math.max(0, newY) + 'px';
+  
+  // Update stored position
+  markerX = newX;
+  markerY = newY;
+  
+  e.preventDefault();
+});
+
+document.addEventListener('pointerup', (e) => {
+  if (markerDragging) {
+    markerDragging = false;
+    
+    if (locationMarker) {
+      try {
+        locationMarker.releasePointerCapture(e.pointerId);
+      } catch (err) {
+        // Ignore
+      }
+    }
+  }
+});
+
+// ============================================
+// SIGNATURE PLACEMENT (MODIFIED)
 // ============================================
 function placeSignatureOnPdf() {
   removeSignaturePreview();
@@ -451,12 +669,36 @@ function placeSignatureOnPdf() {
   signaturePreview.style.width = CONFIG.SIGNATURE.DEFAULT_WIDTH + 'px';
   signaturePreview.style.height = CONFIG.SIGNATURE.DEFAULT_HEIGHT + 'px';
   
-  // ✅ SMART POSITIONING: Bottom-left (standard surat rasmi)
+  // ✅ SMART POSITIONING: Use marker if exists, else bottom-left
   const canvas = document.getElementById('pdfCanvas');
   const canvasHeight = canvas ? canvas.offsetHeight : 600;
   
-  signaturePreview.style.left = '50px';  // Kiri (standard margin)
-  signaturePreview.style.top = (canvasHeight - 150) + 'px';  // Bawah (with margin)
+  if (markerX !== null && markerY !== null) {
+    // ✅ DIRECT POSITION (marker already scroll-adjusted)
+    signaturePreview.style.left = markerX + 'px';
+    signaturePreview.style.top = markerY + 'px';
+    
+    DSLOG('Signature placed at marker', {
+      markerX,
+      markerY,
+      signatureLeft: signaturePreview.style.left,
+      signatureTop: signaturePreview.style.top
+    });
+    
+    // Remove marker visual (but keep position until signature rendered)
+    removeLocationMarker();
+    
+    // ✅ NOW reset position variables AFTER use
+    markerX = null;
+    markerY = null;
+    
+    // Reset buttons to normal signature state
+    document.getElementById('changePositionBtn')?.classList.add('hidden');
+  } else {
+    // Default: bottom-left
+    signaturePreview.style.left = '50px';
+    signaturePreview.style.top = (canvasHeight - 150) + 'px';
+  }
 
   const img = document.createElement('img');
   img.src = signatureDataUrl;
@@ -756,6 +998,12 @@ function removeSignaturePreview() {
       pdfCanvas._tapToPlaceHandler = null;
     }
     
+    // ✅ CLEANUP: Remove marking handler
+    if (pdfCanvas && pdfCanvas._markingHandler) {
+      pdfCanvas.removeEventListener('click', pdfCanvas._markingHandler);
+      pdfCanvas._markingHandler = null;
+    }
+    
     signaturePreview.remove();
     signaturePreview = null;
   }
@@ -763,6 +1011,13 @@ function removeSignaturePreview() {
   if (rafId) {
     cancelAnimationFrame(rafId);
     rafId = null;
+  }
+  // ✅ RESET BUTTONS (restore initial state if no marker)
+  if (markerX === null && markerY === null) {
+    // No marker exists, show initial buttons
+    document.getElementById('markLocationBtn')?.classList.remove('hidden');
+    document.getElementById('signBtn')?.classList.add('hidden');
+    document.getElementById('changePositionBtn')?.classList.add('hidden');
   }
   // Reset semua drag/resize states
   isDragging = false;
