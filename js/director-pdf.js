@@ -25,7 +25,6 @@ let dragStartY = 0;
 let resizeHandle = null;
 let lastPointerX = null;
 let activePointerId = null;
-let signatureUnlocked = false;
 
 // ============================================
 // VIEW REQUEST & LOAD PDF
@@ -437,21 +436,15 @@ function placeSignatureOnPdf() {
   signaturePreview.appendChild(handle);
 
   container.appendChild(signaturePreview);
-
+  // 🔒 Signature boleh gerak, tapi JANGAN blok butang bawah
+  signaturePreview.style.pointerEvents = 'auto';
   // 🔑 HANYA SATU EVENT DI SINI
   signaturePreview.addEventListener('pointerdown', onPointerDown);
 
   updateButtonsAfterSignature();
-  const btn = document.getElementById('toggleSignatureMove');
-  if (btn) {
-  btn.disabled = false;
-  btn.textContent = '🔒 KUNCI TANDATANGAN';
-}
-
   Toast.success('Tandatangan diletakkan. Seret atau resize.');
 }
 function onPointerDown(e) {
-  if (!signatureUnlocked) return;
   if (!signaturePreview) return;
 
   activePointerId = e.pointerId;
@@ -522,11 +515,22 @@ document.addEventListener('pointerup', (e) => {
 
 
 function removeSignaturePreview() {
-  if (signaturePreview && signaturePreview.parentNode) {
-    signaturePreview.parentNode.removeChild(signaturePreview);
+  DSLOG('removeSignaturePreview', {
+  exists: !!signaturePreview,
+  dataUrl: !!signatureDataUrl
+});
+   console.log('🔴 removeSignaturePreview() DIPANGGIL');
+  if (signaturePreview) {
+    signaturePreview.remove();
     signaturePreview = null;
   }
+
+  isDragging = false;
+  isResizing = false;
+  activePointerId = null;
+  lastPointerX = null;
 }
+
 
 function repositionSignaturePreview() {
   // Called after zoom/page change
@@ -819,3 +823,4 @@ async function uploadSignedPdf(base64Data) {
     Toast.error('Ralat: ' + err.message);
   }
 }
+
