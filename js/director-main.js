@@ -196,15 +196,21 @@ function renderRequestsList() {
 // BUTTON STATE MANAGEMENT
 // ============================================
 function updateButtonsAfterSignature() {
-  // Hide SIGN & REJECT
-  document.querySelector('button[onclick="showSignaturePad()"]')?.classList.add('hidden');
-  document.getElementById('rejectBtn')?.classList.add('hidden');
+  // Hide SIGN
+  const signBtn = document.querySelector('button[onclick="showSignaturePad()"]');
+  if (signBtn) signBtn.classList.add('hidden');
 
-  // Show PREVIEW & CANCEL
+  // Hide REJECT
+  const rejectBtn = document.getElementById('rejectBtn');
+  if (rejectBtn) rejectBtn.classList.add('hidden');
+
+  // Show PREVIEW
   document.getElementById('previewBtn')?.classList.remove('hidden');
+
+  // Show CANCEL SIGNATURE
   document.getElementById('cancelSignBtn')?.classList.remove('hidden');
 
-  // Create / show CONFIRM
+  // Show / create CONFIRM
   let confirmBtn = document.getElementById('confirmSignBtn');
   if (!confirmBtn) {
     confirmBtn = document.createElement('button');
@@ -214,14 +220,19 @@ function updateButtonsAfterSignature() {
     confirmBtn.textContent = '✓ SAHKAN & SIMPAN';
     confirmBtn.onclick = showPreviewBeforeConfirm;
 
-    document.querySelector('#viewerScreen .flex.gap-3').appendChild(confirmBtn);
+    document.getElementById('viewerActionButtons')?.appendChild(confirmBtn);
   }
 }
 
+
 function resetButtons() {
-  // Show SIGN & REJECT
-  document.querySelector('button[onclick="showSignaturePad()"]')?.classList.remove('hidden');
-  document.getElementById('rejectBtn')?.classList.remove('hidden');
+  // Show SIGN
+  const signBtn = document.querySelector('button[onclick="showSignaturePad()"]');
+  if (signBtn) signBtn.classList.remove('hidden');
+
+  // Show REJECT
+  const rejectBtn = document.getElementById('rejectBtn');
+  if (rejectBtn) rejectBtn.classList.remove('hidden');
 
   // Hide PREVIEW & CANCEL
   document.getElementById('previewBtn')?.classList.add('hidden');
@@ -232,19 +243,25 @@ function resetButtons() {
 }
 
 
+
+// Line 247-271 - ganti dengan ini:
 function cancelSignature() {
-  // Prevent duplicate modals
-  if (document.querySelector('.fixed.inset-0.bg-black.bg-opacity-75')) return;
+  DSLOG('cancelSignature CLICK');
+  console.log('✅ cancelSignature() DIPANGGIL');
+  
+  // Prevent duplicate CANCEL modals only
+  if (document.getElementById('cancelSignModal')) return;
   
   // Show confirmation modal
   const modal = document.createElement('div');
+  modal.id = 'cancelSignModal'; // ← TAMBAH ID SPECIFIC
   modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50';
   modal.innerHTML = `
     <div class="bg-white rounded-lg p-6 max-w-sm w-full">
       <h3 class="text-lg font-bold mb-4 text-gray-800">Batal Tandatangan?</h3>
       <p class="text-gray-600 mb-6">Buang tandatangan dan mula semula?</p>
       <div class="flex gap-3">
-        <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition-smooth btn">
+        <button onclick="document.getElementById('cancelSignModal').remove()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition-smooth btn">
           Tidak
         </button>
         <button onclick="confirmCancelSignature()" class="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-smooth btn">
@@ -257,18 +274,40 @@ function cancelSignature() {
 }
 
 function confirmCancelSignature() {
-  // Close modal
-  document.querySelector('.fixed.inset-0').remove();
-  
-  // Remove signature preview
+  DSLOG('confirmCancelSignature EXEC');
+  // tutup modal
+  document.getElementById('cancelSignModal')?.remove();
+
+  console.log('🔄 RESET SIGNATURE SEPENUHNYA');
+
+  // 1️⃣ BUANG preview
   removeSignaturePreview();
+
+  // 2️⃣ RESET data
   signatureDataUrl = null;
-  
-  // Reset buttons
-  resetButtons();
-  
-  Toast.info('Tandatangan telah dibatalkan');
+
+  // 3️⃣ BUANG butang dinamik (PENTING)
+  document.getElementById('confirmSignBtn')?.remove();
+
+  // 4️⃣ SEMBUNYI preview
+  document.getElementById('previewBtn')?.classList.add('hidden');
+
+  // 5️⃣ SEMBUNYI batal
+  document.getElementById('cancelSignBtn')?.classList.add('hidden');
+
+  // 6️⃣ PAPAR SEMULA butang asal
+  document.querySelector('button[onclick="showSignaturePad()"]')
+    ?.classList.remove('hidden');
+
+  document.getElementById('rejectBtn')
+    ?.classList.remove('hidden');
+
+  Toast.info('Tandatangan telah dibatalkan sepenuhnya');
 }
+
+
+
+
 
 // ============================================
 // REJECT REQUEST
@@ -344,25 +383,22 @@ function backToDashboard() {
 // INITIALIZATION
 // ============================================
 window.addEventListener('DOMContentLoaded', () => {
-  // Setup preview button
+  // Setup PREVIEW button
   const viewerScreen = document.getElementById('viewerScreen');
-  if (viewerScreen) {
-    const actionButtons = viewerScreen.querySelector('.flex.gap-3');
-    if (actionButtons && !document.getElementById('previewBtn')) {
-      const previewBtn = document.createElement('button');
-      previewBtn.id = 'previewBtn';
-      previewBtn.className = 'hidden flex-1 bg-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-smooth';
-      previewBtn.textContent = '👁️ PREVIEW';
-      previewBtn.onclick = showPreviewBeforeConfirm;
-      
-      // Insert before first button
-      actionButtons.insertBefore(previewBtn, actionButtons.children[0]);
-    }
-  }
-  // Cancel Signature button
-  const viewer = document.getElementById('viewerScreen');
-  const actionButtons = viewer?.querySelector('.flex.gap-3');
+  const actionButtons = viewerScreen?.querySelector('.flex.gap-3');
 
+  if (actionButtons && !document.getElementById('previewBtn')) {
+    const previewBtn = document.createElement('button');
+    previewBtn.id = 'previewBtn';
+    previewBtn.className =
+      'hidden flex-1 bg-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-smooth';
+    previewBtn.textContent = '👁️ PREVIEW';
+    previewBtn.onclick = showPreviewBeforeConfirm;
+
+    actionButtons.insertBefore(previewBtn, actionButtons.children[0]);
+  }
+
+  // Setup BATAL TANDATANGAN button
   if (actionButtons && !document.getElementById('cancelSignBtn')) {
     const cancelBtn = document.createElement('button');
     cancelBtn.id = 'cancelSignBtn';
@@ -374,20 +410,11 @@ window.addEventListener('DOMContentLoaded', () => {
     actionButtons.appendChild(cancelBtn);
   }
 
-
-  // Check authentication
+  // Auth check
   if (sessionStorage.getItem('directorAuth') === 'true') {
     showScreen('dashboardScreen');
     loadDashboard();
   } else {
     showScreen('loginScreen');
-  }
-  
-  // Enter key login
-  const loginPassword = document.getElementById('loginPassword');
-  if (loginPassword) {
-    loginPassword.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') login();
-    });
   }
 });
