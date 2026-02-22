@@ -6,6 +6,7 @@
 // PDF State
 let pdfDocument = null;
 let pdfBytes = null;
+let currentRenderScale = 1;
 let currentPage = 1;
 let totalPages = 0;
 let currentZoom = CONFIG.PDF.DEFAULT_ZOOM;
@@ -43,6 +44,7 @@ let markingMode = false;
 let locationMarker = null;
 let markerX = null;
 let markerY = null;
+
 
 // ============================================
 // VIEW REQUEST & LOAD PDF
@@ -173,12 +175,20 @@ async function renderPage() {
 
     // Apply zoom as multiplier
     const finalScale = fitScale * currentZoom;
+    currentRenderScale = finalScale;
 
     // Final viewport
     const viewport = page.getViewport({ scale: finalScale });
     
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+
+    canvas.width = viewport.width * outputScale;
+    canvas.height = viewport.height * outputScale;
+
+    canvas.style.width = viewport.width + "px";
+    canvas.style.height = viewport.height + "px";
+
+    pdfContext.setTransform(outputScale, 0, 0, outputScale, 0, 0);
     
     console.log('Rendering - Zoom:', currentZoom, 'Scale:', (currentZoom * 1.5).toFixed(2), 'Canvas:', canvas.width, 'x', canvas.height);
     
@@ -282,9 +292,20 @@ function showSignaturePad() {
   
   const canvas = document.getElementById('signatureCanvas');
   signatureContext = canvas.getContext('2d', { willReadFrequently: true });
-  
-  // Clear canvas (transparent)
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  // Reset transform dulu
+  signatureContext.setTransform(1, 0, 0, 1, 0, 0);
+
+  // Clear full pixel canvas
   signatureContext.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Apply DPR scaling
+  signatureContext.scale(dpr, dpr);
   
   // Setup drawing
   signatureContext.strokeStyle = CONFIG.SIGNATURE.LINE_COLOR;
@@ -323,8 +344,8 @@ function startDrawing(e) {
   const scaleY = canvas.height / rect.height;
   
   // Get accurate position
-  const x = (e.clientX - rect.left) * scaleX;
-  const y = (e.clientY - rect.top) * scaleY;
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
   
   signatureContext.beginPath();
   signatureContext.moveTo(x, y);
@@ -343,8 +364,8 @@ function draw(e) {
   const scaleY = canvas.height / rect.height;
   
   // Get accurate position
-  const x = (e.clientX - rect.left) * scaleX;
-  const y = (e.clientY - rect.top) * scaleY;
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
   
   signatureContext.lineTo(x, y);
   signatureContext.stroke();
@@ -367,8 +388,8 @@ function handleTouchStart(e) {
   const scaleY = canvas.height / rect.height;
   
   // Get accurate position
-  const x = (touch.clientX - rect.left) * scaleX;
-  const y = (touch.clientY - rect.top) * scaleY;
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
   
   isDrawing = true;
   signatureContext.beginPath();
@@ -388,8 +409,8 @@ function handleTouchMove(e) {
   const scaleY = canvas.height / rect.height;
   
   // Get accurate position
-  const x = (touch.clientX - rect.left) * scaleX;
-  const y = (touch.clientY - rect.top) * scaleY;
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
   
   signatureContext.lineTo(x, y);
   signatureContext.stroke();
@@ -404,7 +425,7 @@ async function applySignature() {
   let isEmpty = true;
   
   for (let i = 0; i < data.length; i += 4) {
-    if (data[i] !== 255 || data[i+1] !== 255 || data[i+2] !== 255) {
+    if (data[i+3] !== 0) {
       isEmpty = false;
       break;
     }
@@ -417,15 +438,15 @@ async function applySignature() {
   
   // Add timestamp to signature
   const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = canvas.width + 180; // Extra space on RIGHT
-  tempCanvas.height = canvas.height; // No extra height
+  tempCanvas.width = canvas.width + 300;
+tempCanvas.height = Math.max(canvas.height, 60 * (window.devicePixelRatio || 1));
   const tempContext = tempCanvas.getContext('2d');
 
   // Draw signature (transparent background)
   tempContext.drawImage(canvas, 0, 0);
 
   // Draw timestamp with white background box
-  const timestamp = new Date().toLocaleString('ms-MY', {
+  const timestamp = new Date().toLocaleString('en-GB', {
     timeZone: 'Asia/Kuala_Lumpur',
     year: 'numeric',
     month: '2-digit',
@@ -435,16 +456,16 @@ async function applySignature() {
     second: '2-digit'
   });
 
-  tempContext.font = '11px Arial';
+  tempContext.font = '24px Arial';
   const textWidth = tempContext.measureText(timestamp).width;
 
   // White background for timestamp (on RIGHT side)
   tempContext.fillStyle = '#ffffff';
   tempContext.fillRect(
     canvas.width + 5, // Position on right
-    (canvas.height - 20) / 2, // Center vertically
-    textWidth + 10,
-    20
+    (canvas.height - 32) / 2, // Center vertically
+    textWidth + 20,
+    32
   );
 
   // Timestamp text (horizontal on RIGHT)
@@ -533,17 +554,16 @@ function placeLocationMarker(e) {
   
   const pdfCanvas = document.getElementById('pdfCanvas');
   const container = document.getElementById('pdfViewerContainer');
-  const rect = pdfCanvas.getBoundingClientRect();
-  
-  // ✅ SIMPLE & CORRECT: Rect already scroll-aware
-  markerX = e.clientX - rect.left - 12;
-  markerY = e.clientY - rect.top - 12;
+  const containerRect = container.getBoundingClientRect();
+
+  markerX = (e.clientX - containerRect.left) + container.scrollLeft - 12;
+  markerY = (e.clientY - containerRect.top)  + container.scrollTop  - 12;
   
   DSLOG('Marker position calculated', {
     clickX: e.clientX,
     clickY: e.clientY,
-    canvasLeft: rect.left,
-    canvasTop: rect.top,
+    canvasLeft: containerRect.left,
+    canvasTop: containerRect.top,
     markerX,
     markerY
   });
@@ -666,6 +686,7 @@ function placeSignatureOnPdf() {
 
   signaturePreview = document.createElement('div');
   signaturePreview.className = 'signature-preview locked';  // ✅ Default locked
+  signaturePreview.style.position = 'absolute';
   signaturePreview.style.width = CONFIG.SIGNATURE.DEFAULT_WIDTH + 'px';
   signaturePreview.style.height = CONFIG.SIGNATURE.DEFAULT_HEIGHT + 'px';
   
@@ -674,9 +695,12 @@ function placeSignatureOnPdf() {
   const canvasHeight = canvas ? canvas.offsetHeight : 600;
   
   if (markerX !== null && markerY !== null) {
-    // ✅ DIRECT POSITION (marker already scroll-adjusted)
-    signaturePreview.style.left = markerX + 'px';
-    signaturePreview.style.top = markerY + 'px';
+
+  const defaultWidth = CONFIG.SIGNATURE.DEFAULT_WIDTH;
+  const defaultHeight = CONFIG.SIGNATURE.DEFAULT_HEIGHT;
+
+  signaturePreview.style.left = (markerX - defaultWidth / 2) + 'px';
+  signaturePreview.style.top = (markerY - defaultHeight / 2) + 'px';
     
     DSLOG('Signature placed at marker', {
       markerX,
@@ -719,7 +743,7 @@ function placeSignatureOnPdf() {
   handle.style.display = 'none';  // ✅ Hidden when locked
   signaturePreview.appendChild(handle);
 
-  container.appendChild(signaturePreview);
+  document.getElementById('pdfCanvas').parentElement.appendChild(signaturePreview);
   
   signaturePreview.style.pointerEvents = 'auto';
   signaturePreview.addEventListener('pointerdown', onPointerDown);
@@ -1049,18 +1073,26 @@ function getSignatureRelativePosition() {
   if (!signaturePreview) return null;
   
   const canvas = document.getElementById('pdfCanvas');
-  const canvasRect = canvas.getBoundingClientRect();
-  const sigRect = signaturePreview.getBoundingClientRect();
-  
-  // Position relative to canvas (in pixels)
-  const relativeX = sigRect.left - canvasRect.left;
-  const relativeY = sigRect.top - canvasRect.top;
-  
-  // As PERCENTAGE of canvas dimensions (more reliable across scales)
-  const percentX = relativeX / canvas.width;
-  const percentY = relativeY / canvas.height;
-  const percentWidth = sigRect.width / canvas.width;
-  const percentHeight = sigRect.height / canvas.height;
+  const container = document.getElementById('pdfViewerContainer');
+  const containerRect = container.getBoundingClientRect();
+  const canvasRect    = canvas.getBoundingClientRect();
+
+  const canvasOffsetLeft = (canvasRect.left - containerRect.left) + container.scrollLeft;
+  const canvasOffsetTop  = (canvasRect.top  - containerRect.top)  + container.scrollTop;
+
+  const sigLeft = parseFloat(signaturePreview.style.left) || 0;
+  const sigTop  = parseFloat(signaturePreview.style.top)  || 0;
+
+  const relativeX = sigLeft - canvasOffsetLeft;
+  const relativeY = sigTop  - canvasOffsetTop;
+
+  const canvasDisplayWidth  = canvas.offsetWidth;
+  const canvasDisplayHeight = canvas.offsetHeight;
+
+  const percentX      = relativeX                     / canvasDisplayWidth;
+  const percentY      = relativeY                     / canvasDisplayHeight;
+  const percentWidth  = signaturePreview.offsetWidth  / canvasDisplayWidth;
+  const percentHeight = signaturePreview.offsetHeight / canvasDisplayHeight;
   
   console.log('Signature position (percentage):', {
     percentX: percentX.toFixed(4),
@@ -1077,8 +1109,8 @@ function getSignatureRelativePosition() {
     // Also return pixel values for preview
     pixelX: relativeX,
     pixelY: relativeY,
-    pixelWidth: sigRect.width,
-    pixelHeight: sigRect.height
+    pixelWidth: signaturePreview.offsetWidth,
+    pixelHeight: signaturePreview.offsetHeight
   };
 }
 // ============================================
