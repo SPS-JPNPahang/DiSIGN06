@@ -143,8 +143,10 @@
               <input 
                 type="email"
                 id="email" 
-                placeholder="email@contoh.com" 
+                placeholder="nama@moe.gov.my"
                 required
+                pattern="^[a-zA-Z0-9._%+-]+@moe\.gov\.my$"
+                title="Hanya emel rasmi @moe.gov.my dibenarkan"
                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-smooth"
               >
             </div>
@@ -349,7 +351,13 @@ document.getElementById('form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const file = document.getElementById('pdf').files[0];
-  
+  const emailValue = document.getElementById('email').value.trim().toLowerCase();
+
+  if (!emailValue.endsWith('@moe.gov.my')) {
+    document.getElementById('submitLoadingOverlay')?.remove();
+    Toast.error('Hanya emel rasmi @moe.gov.my dibenarkan');
+    return;
+  }
   // Show loading overlay
   const loadingOverlay = document.createElement('div');
   loadingOverlay.id = 'submitLoadingOverlay';
