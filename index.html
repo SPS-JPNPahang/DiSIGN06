@@ -350,6 +350,9 @@ document.addEventListener('click', function(e) {
 document.getElementById('form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
+  if (window._isSubmitting) return;
+  window._isSubmitting = true;
+
   const file = document.getElementById('pdf').files[0];
   const emailValue = document.getElementById('email').value.trim().toLowerCase();
 
@@ -376,6 +379,7 @@ document.getElementById('form').addEventListener('submit', async (e) => {
     Utils.validateFile(file);
   } catch (err) {
     document.getElementById('submitLoadingOverlay').remove();
+    window._isSubmitting = false;
     Toast.error(err.message);
     return;
   }
@@ -410,6 +414,7 @@ document.getElementById('form').addEventListener('submit', async (e) => {
     const json = await res.json();
     
     document.getElementById('submitLoadingOverlay').remove();
+    window._isSubmitting = false;
     
     if (json.ok) {
       resultDiv.innerHTML = `
@@ -443,6 +448,7 @@ document.getElementById('form').addEventListener('submit', async (e) => {
 
   } catch (err) {
     document.getElementById('submitLoadingOverlay').remove();
+     window._isSubmitting = false;
     
     resultDiv.innerHTML = `
       <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
