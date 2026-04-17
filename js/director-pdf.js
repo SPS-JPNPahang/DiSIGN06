@@ -437,13 +437,17 @@ async function applySignature() {
   }
   
   // Add timestamp to signature
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = canvas.width / dpr;
+  const cssHeight = canvas.height / dpr;
+
   const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = canvas.width + 300;
-tempCanvas.height = Math.max(canvas.height, 60 * (window.devicePixelRatio || 1));
+  tempCanvas.width = cssWidth + 300;
+  tempCanvas.height = Math.max(cssHeight, 60);
   const tempContext = tempCanvas.getContext('2d');
 
-  // Draw signature (transparent background)
-  tempContext.drawImage(canvas, 0, 0);
+  // Draw signature (normalize from physical to CSS pixels)
+  tempContext.drawImage(canvas, 0, 0, cssWidth, cssHeight);
 
   // Draw timestamp with white background box
   const timestamp = new Date().toLocaleString('en-GB', {
