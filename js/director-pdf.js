@@ -466,8 +466,8 @@ async function applySignature() {
   // White background for timestamp (on RIGHT side)
   tempContext.fillStyle = '#ffffff';
   tempContext.fillRect(
-    canvas.width + 5, // Position on right
-    (canvas.height - 32) / 2, // Center vertically
+    cssWidth + 5,
+    (cssHeight - 32) / 2,
     textWidth + 20,
     32
   );
@@ -476,9 +476,9 @@ async function applySignature() {
   tempContext.fillStyle = '#000000';
   tempContext.textAlign = 'left';
   tempContext.fillText(
-    timestamp, 
-    canvas.width + 10, // Position from left
-    canvas.height / 2 + 5 // Center vertically
+    timestamp,
+    cssWidth + 10,
+    cssHeight / 2 + 5
   );
 
   signatureDataUrl = tempCanvas.toDataURL('image/png');
