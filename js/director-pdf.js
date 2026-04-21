@@ -437,17 +437,13 @@ async function applySignature() {
   }
   
   // Add timestamp to signature
-  const dpr = window.devicePixelRatio || 1;
-  const cssWidth = canvas.width / dpr;
-  const cssHeight = canvas.height / dpr;
-
   const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = cssWidth + 300;
-  tempCanvas.height = Math.max(cssHeight, 60);
+  tempCanvas.width = canvas.width + 300;
+  tempCanvas.height = Math.max(canvas.height, 60 * (window.devicePixelRatio || 1));
   const tempContext = tempCanvas.getContext('2d');
 
-  // Draw signature (normalize from physical to CSS pixels)
-  tempContext.drawImage(canvas, 0, 0, cssWidth, cssHeight);
+  // Draw signature
+  tempContext.drawImage(canvas, 0, 0);
 
   // Draw timestamp with white background box
   const timestamp = new Date().toLocaleString('en-GB', {
@@ -465,20 +461,20 @@ async function applySignature() {
 
   // White background for timestamp (on RIGHT side)
   tempContext.fillStyle = '#ffffff';
-  tempContext.fillRect(
-    cssWidth + 5,
-    (cssHeight - 32) / 2,
-    textWidth + 20,
-    32
-  );
+   tempContext.fillRect(
+      canvas.width + 5,
+      (canvas.height - 32) / 2,
+      textWidth + 20,
+      32
+    );
 
   // Timestamp text (horizontal on RIGHT)
   tempContext.fillStyle = '#000000';
   tempContext.textAlign = 'left';
   tempContext.fillText(
     timestamp,
-    cssWidth + 10,
-    cssHeight / 2 + 5
+    canvas.width + 10,
+    canvas.height / 2 + 5
   );
 
   signatureDataUrl = tempCanvas.toDataURL('image/png');
